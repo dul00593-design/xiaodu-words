@@ -11,35 +11,26 @@ body{font-family:-apple-system,sans-serif;background:linear-gradient(135deg,#667
 .header{text-align:center;color:white;margin-bottom:20px}
 .header h1{font-size:24px;margin-bottom:5px}
 .subtitle{font-size:14px;opacity:.9}
-.date{font-size:12px;opacity:.8;margin-top:5px}
 .stats-card,.word-card{background:white;border-radius:16px;padding:20px;margin-bottom:15px;box-shadow:0 4px 20px rgba(0,0,0,.1)}
 .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;text-align:center}
 .stat-item .number{font-size:28px;font-weight:bold;color:#667eea}
 .stat-item .label{font-size:12px;color:#666;margin-top:5px}
-.word-card h2{font-size:16px;margin-bottom:15px;color:#333;display:flex;justify-content:space-between}
-.progress{font-size:14px;color:#667eea}
+.word-card h2{font-size:16px;margin-bottom:15px;color:#333}
 .word-item{padding:15px;border-bottom:1px solid #f0f0f0;cursor:pointer}
 .word-item:last-child{border-bottom:none}
-.word-header{display:flex;justify-content:space-between;align-items:center}
 .word-title{font-size:18px;font-weight:bold;color:#333}
-.sound-btn{background:none;border:none;font-size:20px;cursor:pointer;padding:5px}
-.sound-btn:hover{transform:scale(1.2)}
+.sound-btn{background:none;border:none;font-size:20px;cursor:pointer}
 .word-phonetic{font-size:14px;color:#667eea;margin:5px 0}
 .word-meaning{font-size:14px;color:#666}
 .word-example{font-size:13px;color:#999;font-style:italic;display:none;margin-top:10px;padding-top:10px;border-top:1px dashed #e0e0e0}
 .word-item.expanded .word-example{display:block}
 .checkin-btn{width:100%;padding:18px;background:linear-gradient(135deg,#667eea,#764ba2);color:white;border:none;border-radius:12px;font-size:18px;font-weight:bold;cursor:pointer;margin-top:10px}
-.checkin-btn:disabled{opacity:.6;cursor:not-allowed}
+.checkin-btn:disabled{opacity:.5;cursor:not-allowed}
 .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:1000;justify-content:center;align-items:center}
 .modal.show{display:flex}
 .modal-content{background:white;border-radius:20px;padding:30px;text-align:center;max-width:300px}
 .modal-content .icon{font-size:60px;margin-bottom:15px}
-.modal-content h3{font-size:20px;margin-bottom:10px}
-.modal-content button{padding:12px 30px;background:linear-gradient(135deg,#667eea,#764ba2);color:white;border:none;border-radius:8px;font-size:16px;cursor:pointer}
-.badge-list{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:10px}
-.badge{font-size:11px;padding:4px 8px;border-radius:10px;background:#f0f0f0;color:#666}
-.badge.earned{background:linear-gradient(135deg,#ffd700,#ffaa00);color:#fff}
-.tip{font-size:12px;color:#999;text-align:center;margin-top:15px}
+.checked-mark{background:#4caf50;color:white;padding:5px 10px;border-radius:5px;font-size:12px;margin-left:10px}
 </style>
 </head>
 <body>
@@ -47,7 +38,6 @@ body{font-family:-apple-system,sans-serif;background:linear-gradient(135deg,#667
 <div class="header">
 <h1>📚 小杜的单词打卡</h1>
 <p class="subtitle">每天10个，高考无忧</p>
-<p class="date" id="todayDate"></p>
 </div>
 <div class="stats-card">
 <div class="stats-grid">
@@ -55,14 +45,12 @@ body{font-family:-apple-system,sans-serif;background:linear-gradient(135deg,#667
 <div class="stat-item"><div class="number" id="totalWords">0</div><div class="label">已学单词</div></div>
 <div class="stat-item"><div class="number" id="currentStreak">0</div><div class="label">连续打卡</div></div>
 </div>
-<div class="badge-list" id="badgeList"></div>
 </div>
 <div class="word-card">
-<h2>今日单词 <span class="progress" id="progress">0/10</span></h2>
+<h2 id="cardTitle">今日单词</h2>
 <div id="wordList"></div>
 <button class="checkin-btn" id="checkinBtn" onclick="checkIn()">完成今日打卡</button>
 </div>
-<p class="tip">💡 点击单词查看例句，点击🔊听发音</p>
 </div>
 <div class="modal" id="successModal">
 <div class="modal-content">
@@ -73,276 +61,289 @@ body{font-family:-apple-system,sans-serif;background:linear-gradient(135deg,#667
 </div>
 </div>
 <script>
-const vocabulary=[
-{word:"abandon",phonetic:"[əˈbændən]",meaning:"v. 抛弃，放弃",example:"He abandoned his car in the snow."},
-{word:"ability",phonetic:"[əˈbɪləti]",meaning:"n. 能力；才能",example:"She has the ability to speak four languages."},
-{word:"able",phonetic:"[ˈeɪbl]",meaning:"a. 能够的",example:"I was able to solve the problem."},
-{word:"abnormal",phonetic:"[æbˈnɔːml]",meaning:"a. 反常的",example:"The test showed an abnormal level."},
-{word:"aboard",phonetic:"[əˈbɔːd]",meaning:"prep. 在船/飞机上",example:"Welcome aboard Flight 123."},
-{word:"abolish",phonetic:"[əˈbɒlɪʃ]",meaning:"v. 废除",example:"The government plans to abolish the law."},
-{word:"about",phonetic:"[əˈbaʊt]",meaning:"prep. 关于",example:"What are you talking about?"},
-{word:"above",phonetic:"[əˈbʌv]",meaning:"prep. 在…上面",example:"The temperature is above average."},
-{word:"abroad",phonetic:"[əˈbrɔːd]",meaning:"ad. 到国外",example:"She studies abroad in the US."},
-{word:"absence",phonetic:"[ˈæbsəns]",meaning:"n. 缺席",example:"His absence was noted by the teacher."},
-{word:"absolute",phonetic:"[ˈæbsəluːt]",meaning:"a. 绝对的",example:"It is an absolute necessity."},
-{word:"absorb",phonetic:"[əbˈzɔːb]",meaning:"v. 吸收",example:"Plants absorb water from the soil."},
-{word:"abstract",phonetic:"[ˈæbstrækt]",meaning:"a. 抽象的",example:"The concept of beauty is abstract."},
-{word:"abundant",phonetic:"[əˈbʌndənt]",meaning:"a. 丰富的",example:"The country has abundant resources."},
-{word:"academic",phonetic:"[ˌækəˈdemɪk]",meaning:"a. 学术的",example:"She has an academic record."},
-{word:"accept",phonetic:"[əkˈsept]",meaning:"v. 接受",example:"Please accept my apology."},
-{word:"access",phonetic:"[ˈækses]",meaning:"n. 进入；访问",example:"The building has wheelchair access."},
-{word:"accident",phonetic:"[ˈæksɪdənt]",meaning:"n. 事故",example:"There was a car accident."},
-{word:"accommodation",phonetic:"[əˌkɒməˈdeɪʃn]",meaning:"n. 住宿",example:"The price includes accommodation."},
-{word:"accompany",phonetic:"[əˈkʌmpəni]",meaning:"v. 陪伴",example:"She accompanied her friend."},
-{word:"accomplish",phonetic:"[əˈkʌmplɪʃ]",meaning:"v. 完成",example:"We accomplished our mission."},
-{word:"account",phonetic:"[əˈkaʊnt]",meaning:"n. 账户",example:"She opened a bank account."},
-{word:"accurate",phonetic:"[ˈækjərət]",meaning:"a. 准确的",example:"The clock is accurate."},
-{word:"achieve",phonetic:"[əˈtʃiːv]",meaning:"v. 实现",example:"She achieved good grades."},
-{word:"acknowledge",phonetic:"[əkˈnɒlɪdʒ]",meaning:"v. 承认",example:"He acknowledged his mistake."},
-{word:"acquire",phonetic:"[əˈkwaɪə]",meaning:"v. 获得",example:"She acquired knowledge of English."},
-{word:"across",phonetic:"[əˈkrɒs]",meaning:"prep. 横过",example:"The bridge goes across the river."},
-{word:"action",phonetic:"[ˈækʃn]",meaning:"n. 行动",example:"We need to take action."},
-{word:"active",phonetic:"[ˈæktɪv]",meaning:"a. 积极的",example:"She is an active member."},
-{word:"activity",phonetic:"[ækˈtɪvəti]",meaning:"n. 活动",example:"The children enjoyed activities."},
-{word:"actor",phonetic:"[ˈæktə]",meaning:"n. 演员",example:"He wants to become an actor."},
-{word:"actual",phonetic:"[ˈæktʃuəl]",meaning:"a. 实际的",example:"What were his actual words?"},
-{word:"adapt",phonetic:"[əˈdæpt]",meaning:"v. 适应",example:"He adapted to his new school."},
-{word:"add",phonetic:"[æd]",meaning:"v. 添加",example:"Add some sugar."},
-{word:"address",phonetic:"[əˈdres]",meaning:"n. 地址",example:"Write your address clearly."},
-{word:"adequate",phonetic:"[ˈædɪkwət]",meaning:"a. 足够的",example:"The food was adequate."},
-{word:"adjust",phonetic:"[əˈdʒʌst]",meaning:"v. 调整",example:"You can adjust the seat."},
-{word:"admire",phonetic:"[ədˈmaɪə]",meaning:"v. 钦佩",example:"I admire your courage."},
-{word:"admit",phonetic:"[ədˈmɪt]",meaning:"v. 承认",example:"He admitted his mistake."},
-{word:"adopt",phonetic:"[əˈdɒpt]",meaning:"v. 采纳",example:"They adopted a new policy."},
-{word:"adult",phonetic:"[ˈædʌlt]",meaning:"n. 成人",example:"This movie is for adults."},
-{word:"advance",phonetic:"[ədˈvɑːns]",meaning:"v. 前进",example:"The army advanced."},
-{word:"advantage",phonetic:"[ədˈvɑːntɪdʒ]",meaning:"n. 优势",example:"There are many advantages."},
-{word:"adventure",phonetic:"[ədˈventʃə]",meaning:"n. 冒险",example:"It was a great adventure."},
-{word:"advertise",phonetic:"[ˈædvətaɪz]",meaning:"v. 做广告",example:"They advertised their product."},
-{word:"advice",phonetic:"[ədˈvaɪs]",meaning:"n. 建议",example:"Can you give me some advice?"},
-{word:"advise",phonetic:"[ədˈvaɪz]",meaning:"v. 建议",example:"I would advise you to wait."},
-{word:"affair",phonetic:"[əˈfeə]",meaning:"n. 事件",example:"The wedding was a grand affair."},
-{word:"affect",phonetic:"[əˈfekt]",meaning:"v. 影响",example:"The weather will affect our plans."},
-{word:"afford",phonetic:"[əˈfɔːd]",meaning:"v. 负担得起",example:"I can't afford a new car."},
-{word:"afraid",phonetic:"[əˈfreɪd]",meaning:"a. 害怕的",example:"Don't be afraid to ask."},
-{word:"after",phonetic:"[ˈɑːftə]",meaning:"prep. 在…之后",example:"I'll call you after the meeting."},
-{word:"again",phonetic:"[əˈɡen]",meaning:"ad. 再一次",example:"Please try again."},
-{word:"against",phonetic:"[əˈɡenst]",meaning:"prep. 反对",example:"He leaned against the wall."},
-{word:"age",phonetic:"[eɪdʒ]",meaning:"n. 年龄",example:"What is your age?"},
-{word:"agency",phonetic:"[ˈeɪdʒənsi]",meaning:"n. 机构",example:"She works for a travel agency."},
-{word:"agent",phonetic:"[ˈeɪdʒənt]",meaning:"n. 代理人",example:"He is an insurance agent."},
-{word:"agree",phonetic:"[əˈɡriː]",meaning:"v. 同意",example:"I agree with your opinion."},
-{word:"agreement",phonetic:"[əˈɡriːmənt]",meaning:"n. 协议",example:"We reached an agreement."},
-{word:"ahead",phonetic:"[əˈhed]",meaning:"ad. 向前",example:"Go straight ahead."},
-{word:"aid",phonetic:"[eɪd]",meaning:"n. 帮助",example:"First aid is important."},
-{word:"aim",phonetic:"[eɪm]",meaning:"v. 瞄准",example:"He aimed at the target."},
-{word:"air",phonetic:"[eə]",meaning:"n. 空气",example:"Fresh air is good for health."},
-{word:"aircraft",phonetic:"[ˈeəkrɑːft]",meaning:"n. 飞机",example:"The aircraft landed safely."},
-{word:"airline",phonetic:"[ˈeəlaɪn]",meaning:"n. 航空公司",example:"Which airline are you flying?"},
-{word:"airport",phonetic:"[ˈeəpɔːt]",meaning:"n. 机场",example:"We arrived at the airport."},
-{word:"alarm",phonetic:"[əˈlɑːm]",meaning:"n. 警报",example:"The alarm went off at 6 AM."},
-{word:"album",phonetic:"[ˈælbəm]",meaning:"n. 相册",example:"She keeps photos in an album."},
-{word:"alcohol",phonetic:"[ˈælkəhɒl]",meaning:"n. 酒精",example:"The drink contains no alcohol."},
-{word:"alive",phonetic:"[əˈlaɪv]",meaning:"a. 活着的",example:"Is she still alive?"},
-{word:"allow",phonetic:"[əˈlaʊ]",meaning:"v. 允许",example:"Smoking is not allowed."},
-{word:"almost",phonetic:"[ˈɔːlməʊst]",meaning:"ad. 几乎",example:"It's almost time to go."},
-{word:"alone",phonetic:"[əˈləʊn]",meaning:"a. 单独的",example:"She lives alone."},
-{word:"along",phonetic:"[əˈlɒŋ]",meaning:"prep. 沿着",example:"Walk along this road."},
-{word:"already",phonetic:"[ɔːlˈredi]",meaning:"ad. 已经",example:"I've already finished."},
-{word:"also",phonetic:"[ˈɔːlsəʊ]",meaning:"ad. 也",example:"She also likes swimming."},
-{word:"although",phonetic:"[ɔːlˈðəʊ]",meaning:"conj. 虽然",example:"Although it rained, we enjoyed."},
-{word:"always",phonetic:"[ˈɔːlweɪz]",meaning:"ad. 总是",example:"She is always happy."},
-{word:"amaze",phonetic:"[əˈmeɪz]",meaning:"v. 使惊奇",example:"The magician amazed everyone."},
-{word:"ambition",phonetic:"[æmˈbɪʃn]",meaning:"n. 雄心",example:"His ambition is to be a doctor."},
-{word:"ambulance",phonetic:"[ˈæmbjələns]",meaning:"n. 救护车",example:"Call an ambulance!"},
-{word:"among",phonetic:"[əˈmʌŋ]",meaning:"prep. 在…之中",example:"She was among friends."},
-{word:"amount",phonetic:"[əˈmaʊnt]",meaning:"n. 数量",example:"A large amount was stolen."},
-{word:"amuse",phonetic:"[əˈmjuːz]",meaning:"v. 使愉快",example:"The clown amused the children."},
-{word:"analyze",phonetic:"[ˈænəlaɪz]",meaning:"v. 分析",example:"We need to analyze the data."},
-{word:"ancient",phonetic:"[ˈeɪnʃənt]",meaning:"a. 古代的",example:"They visited an ancient temple."},
-{word:"anger",phonetic:"[ˈæŋɡə]",meaning:"n. 愤怒",example:"He couldn't hide his anger."},
-{word:"angle",phonetic:"[ˈæŋɡl]",meaning:"n. 角度",example:"Measure the angle."},
-{word:"angry",phonetic:"[ˈæŋɡri]",meaning:"a. 生气的",example:"She was angry with him."},
-{word:"animal",phonetic:"[ˈænɪml]",meaning:"n. 动物",example:"Dogs are domestic animals."},
-{word:"announce",phonetic:"[əˈnaʊns]",meaning:"v. 宣布",example:"They announced their engagement."},
-{word:"annual",phonetic:"[ˈænjuəl]",meaning:"a. 年度的",example:"This is our annual meeting."},
-{word:"another",phonetic:"[əˈnʌðə]",meaning:"a. 另一个",example:"Would you like another cup?"},
-{word:"answer",phonetic:"[ˈɑːnsə]",meaning:"v. 回答",example:"Please answer the question."},
-{word:"anxiety",phonetic:"[æŋˈzaɪəti]",meaning:"n. 焦虑",example:"She felt anxiety before the exam."},
-{word:"anxious",phonetic:"[ˈæŋkʃəs]",meaning:"a. 焦虑的",example:"I'm anxious about the results."},
-{word:"any",phonetic:"[ˈeni]",meaning:"a. 任何的",example:"Do you have any questions?"},
-{word:"anybody",phonetic:"[ˈenibɒdi]",meaning:"pron. 任何人",example:"Is anybody home?"},
-{word:"anyone",phonetic:"[ˈeniwʌn]",meaning:"pron. 任何人",example:"Can anyone help me?"},
-{word:"anything",phonetic:"[ˈeniθɪŋ]",meaning:"pron. 任何事",example:"You can buy anything."},
-{word:"anyway",phonetic:"[ˈeniweɪ]",meaning:"ad. 无论如何",example:"I'll go anyway."},
-{word:"anywhere",phonetic:"[ˈeniweə]",meaning:"ad. 任何地方",example:"You can sit anywhere."},
-{word:"apart",phonetic:"[əˈpɑːt]",meaning:"ad. 分开",example:"The houses are far apart."},
-{word:"apartment",phonetic:"[əˈpɑːtmənt]",meaning:"n. 公寓",example:"She lives in an apartment."},
-{word:"apologize",phonetic:"[əˈpɒlədʒaɪz]",meaning:"v. 道歉",example:"I apologize for being late."},
-{word:"appear",phonetic:"[əˈpɪə]",meaning:"v. 出现",example:"A figure appeared."},
-{word:"apple",phonetic:"[ˈæpl]",meaning:"n. 苹果",example:"An apple a day keeps the doctor away."},
-{word:"application",phonetic:"[ˌæplɪˈkeɪʃn]",meaning:"n. 申请",example:"I sent my job application."},
-{word:"apply",phonetic:"[əˈplaɪ]",meaning:"v. 申请",example:"I'll apply for the job."},
-{word:"appointment",phonetic:"[əˈpɔɪntmənt]",meaning:"n. 预约",example:"I have a doctor appointment."},
-{word:"appreciate",phonetic:"[əˈpriːʃieɪt]",meaning:"v. 感激",example:"I appreciate your help."},
-{word:"approach",phonetic:"[əˈprəʊtʃ]",meaning:"v. 接近",example:"Winter is approaching."},
-{word:"appropriate",phonetic:"[əˈprəʊpriət]",meaning:"a. 适当的",example:"Wear appropriate clothing."},
-{word:"approve",phonetic:"[əˈpruːv]",meaning:"v. 批准",example:"The committee approved the plan."},
-{word:"architect",phonetic:"[ˈɑːkɪtekt]",meaning:"n. 建筑师",example:"The architect designed this building."},
-{word:"area",phonetic:"[ˈeəriə]",meaning:"n. 区域",example:"This is a residential area."},
-{word:"argue",phonetic:"[ˈɑːɡjuː]",meaning:"v. 争论",example:"They argued about politics."},
-{word:"arise",phonetic:"[əˈraɪz]",meaning:"v. 出现",example:"Problems arose during the project."},
-{word:"arm",phonetic:"[ɑːm]",meaning:"n. 手臂",example:"She held the child in her arms."},
-{word:"army",phonetic:"[ˈɑːmi]",meaning:"n. 军队",example:"He joined the army."},
-{word:"around",phonetic:"[əˈraʊnd]",meaning:"prep. 周围",example:"The children sat around the table."},
-{word:"arrange",phonetic:"[əˈreɪndʒ]",meaning:"v. 安排",example:"I'll arrange a meeting."},
-{word:"arrest",phonetic:"[əˈrest]",meaning:"v. 逮捕",example:"The police arrested the suspect."},
-{word:"arrive",phonetic:"[əˈraɪv]",meaning:"v. 到达",example:"What time does the train arrive?"},
-{word:"arrow",phonetic:"[ˈærəʊ]",meaning:"n. 箭",example:"He shot an arrow at the target."},
-{word:"article",phonetic:"[ˈɑːtɪkl]",meaning:"n. 文章",example:"She wrote an article."},
-{word:"artist",phonetic:"[ˈɑːtɪst]",meaning:"n. 艺术家",example:"She is a talented artist."},
-{word:"as",phonetic:"[æz]",meaning:"conj. 当…时",example:"As she was leaving, the phone rang."},
-{word:"ashamed",phonetic:"[əˈʃeɪmd]",meaning:"a. 羞耻的",example:"He was ashamed of his behavior."},
-{word:"aside",phonetic:"[əˈsaɪd]",meaning:"ad. 在一边",example:"She stepped aside."},
-{word:"ask",phonetic:"[ɑːsk]",meaning:"v. 问",example:"May I ask a question?"},
-{word:"asleep",phonetic:"[əˈsliːp]",meaning:"a. 睡着的",example:"The baby is asleep."},
-{word:"aspect",phonetic:"[ˈæspekt]",meaning:"n. 方面",example:"We discussed every aspect."},
-{word:"assess",phonetic:"[əˈses]",meaning:"v. 评估",example:"We need to assess the situation."},
-{word:"assign",phonetic:"[əˈsaɪn]",meaning:"v. 分配",example:"The teacher assigned homework."},
-{word:"assist",phonetic:"[əˈsɪst]",meaning:"v. 帮助",example:"Can you assist me?"},
-{word:"assume",phonetic:"[əˈsjuːm]",meaning:"v. 假设",example:"I assume you're coming."},
-{word:"assure",phonetic:"[əˈʃɔː]",meaning:"v. 保证",example:"I can assure you of our support."},
-{word:"astonish",phonetic:"[əˈstɒnɪʃ]",meaning:"v. 使惊讶",example:"The news astonished everyone."},
-{word:"athlete",phonetic:"[ˈæθliːt]",meaning:"n. 运动员",example:"She is a professional athlete."},
-{word:"atmosphere",phonetic:"[ˈætməsfɪə]",meaning:"n. 气氛",example:"The restaurant has a nice atmosphere."},
-{word:"attach",phonetic:"[əˈtætʃ]",meaning:"v. 附上",example:"Please attach the file."},
-{word:"attack",phonetic:"[əˈtæk]",meaning:"v. 攻击",example:"The army attacked at dawn."},
-{word:"attempt",phonetic:"[əˈtempt]",meaning:"v. 尝试",example:"He attempted to climb the mountain."},
-{word:"attend",phonetic:"[əˈtend]",meaning:"v. 参加",example:"I will attend the meeting."},
-{word:"attention",phonetic:"[əˈtenʃn]",meaning:"n. 注意",example:"Pay attention to the teacher."},
-{word:"attitude",phonetic:"[ˈætɪtjuːd]",meaning:"n. 态度",example:"She has a positive attitude."},
-{word:"attract",phonetic:"[əˈtrækt]",meaning:"v. 吸引",example:"The festival attracts visitors."},
-{word:"audience",phonetic:"[ˈɔːdiəns]",meaning:"n. 观众",example:"The audience clapped loudly."},
-{word:"author",phonetic:"[ˈɔːθə]",meaning:"n. 作者",example:"Who is the author?"},
-{word:"authority",phonetic:"[ɔːˈθɒrəti]",meaning:"n. 权威",example:"The authority approved the plan."},
-{word:"automatic",phonetic:"[ˌɔːtəˈmætɪk]",meaning:"a. 自动的",example:"The door is automatic."},
-{word:"available",phonetic:"[əˈveɪləbl]",meaning:"a. 可用的",example:"Is this seat available?"},
-{word:"average",phonetic:"[ˈævərɪdʒ]",meaning:"n. 平均",example:"The average age is 35."},
-{word:"avoid",phonetic:"[əˈvɔɪd]",meaning:"v. 避免",example:"Try to avoid mistakes."},
-{word:"award",phonetic:"[əˈwɔːd]",meaning:"n. 奖项",example:"She won an award."},
-{word:"aware",phonetic:"[əˈweə]",meaning:"a. 意识到的",example:"Are you aware of the rules?"},
-{word:"awful",phonetic:"[ˈɔːfl]",meaning:"a. 可怕的",example:"The weather was awful."},
-{word:"baby",phonetic:"[ˈbeɪbi]",meaning:"n. 婴儿",example:"The baby is sleeping."},
-{word:"back",phonetic:"[bæk]",meaning:"n. 背部",example:"She carried a backpack on her back."},
-{word:"background",phonetic:"[ˈbækɡraʊnd]",meaning:"n. 背景",example:"Tell me about your background."},
-{word:"balance",phonetic:"[ˈbæləns]",meaning:"n. 平衡",example:"You need to keep a balance."},
-{word:"ball",phonetic:"[bɔːl]",meaning:"n. 球",example:"He kicked the ball."},
-{word:"ban",phonetic:"[bæn]",meaning:"v. 禁止",example:"Smoking is banned."},
-{word:"banana",phonetic:"[bəˈnɑːnə]",meaning:"n. 香蕉",example:"I eat a banana for breakfast."},
-{word:"band",phonetic:"[bænd]",meaning:"n. 乐队",example:"The band played until midnight."},
-{word:"bank",phonetic:"[bæŋk]",meaning:"n. 银行",example:"I need to go to the bank."},
-{word:"bar",phonetic:"[bɑː]",meaning:"n. 酒吧",example:"Let's meet at the bar."},
-{word:"base",phonetic:"[beɪs]",meaning:"n. 基础",example:"The company has its base in London."},
-{word:"basic",phonetic:"[ˈbeɪsɪk]",meaning:"a. 基本的",example:"We need basic skills first."},
-{word:"basket",phonetic:"[ˈbɑːskɪt]",meaning:"n. 篮子",example:"She carried a basket of fruit."},
-{word:"basketball",phonetic:"[ˈbɑːskɪtbɔːl]",meaning:"n. 篮球",example:"He loves playing basketball."},
-{word:"bath",phonetic:"[bɑːθ]",meaning:"n. 洗澡",example:"I need a hot bath."},
-{word:"bathroom",phonetic:"[ˈbɑːθruːm]",meaning:"n. 浴室",example:"Where is the bathroom?"},
-{word:"battery",phonetic:"[ˈbætri]",meaning:"n. 电池",example:"The battery is dead."},
-{word:"battle",phonetic:"[ˈbætl]",meaning:"n. 战斗",example:"They won the battle."},
-{word:"beach",phonetic:"[biːtʃ]",meaning:"n. 海滩",example:"We went to the beach."},
-{word:"bear",phonetic:"[beə]",meaning:"n. 熊",example:"Bears live in the forest."},
-{word:"beat",phonetic:"[biːt]",meaning:"v. 打败",example:"Our team beat them."},
-{word:"beautiful",phonetic:"[ˈbjuːtɪfl]",meaning:"a. 美丽的",example:"She is beautiful."},
-{word:"beauty",phonetic:"[ˈbjuːti]",meaning:"n. 美",example:"She is known for her beauty."},
-{word:"because",phonetic:"[bɪˈkɒz]",meaning:"conj. 因为",example:"I stayed because it was raining."},
-{word:"become",phonetic:"[bɪˈkʌm]",meaning:"v. 变成",example:"He became a doctor."},
-{word:"bed",phonetic:"[bed]",meaning:"n. 床",example:"It's time to go to bed."},
-{word:"bedroom",phonetic:"[ˈbedruːm]",meaning:"n. 卧室",example:"She has a nice bedroom."},
-{word:"beer",phonetic:"[bɪə]",meaning:"n. 啤酒",example:"Would you like a beer?"},
-{word:"before",phonetic:"[bɪˈfɔː]",meaning:"prep. 在…之前",example:"Call me before you leave."},
-{word:"begin",phonetic:"[bɪˈɡɪn]",meaning:"v. 开始",example:"Let's begin the meeting."},
-{word:"behavior",phonetic:"[bɪˈheɪvjə]",meaning:"n. 行为",example:"His behavior was strange."},
-{word:"behind",phonetic:"[bɪˈhaɪnd]",meaning:"prep. 在…后面",example:"The sun is behind the clouds."},
+var vocabulary=[
+{word:"abandon",phonetic:"[əˈbændən]",meaning:"v. 抛弃，放弃",example:"He abandoned his car."},
+{word:"ability",phonetic:"[əˈbɪləti]",meaning:"n. 能力",example:"She has the ability."},
+{word:"able",phonetic:"[ˈeɪbl]",meaning:"a. 能够的",example:"I was able to do it."},
+{word:"abnormal",phonetic:"[æbˈnɔːml]",meaning:"a. 反常的",example:"This is abnormal."},
+{word:"aboard",phonetic:"[əˈbɔːd]",meaning:"prep. 在船上",example:"Welcome aboard."},
+{word:"abolish",phonetic:"[əˈbɒlɪʃ]",meaning:"v. 废除",example:"Abolish the law."},
+{word:"about",phonetic:"[əˈbaʊt]",meaning:"prep. 关于",example:"What about?"},
+{word:"above",phonetic:"[əˈbʌv]",meaning:"prep. 在上面",example:"Above average."},
+{word:"abroad",phonetic:"[əˈbrɔːd]",meaning:"ad. 国外",example:"Study abroad."},
+{word:"absence",phonetic:"[ˈæbsəns]",meaning:"n. 缺席",example:"His absence."},
+{word:"absolute",phonetic:"[ˈæbsəluːt]",meaning:"a. 绝对的",example:"Absolute truth."},
+{word:"absorb",phonetic:"[əbˈzɔːb]",meaning:"v. 吸收",example:"Absorb water."},
+{word:"abstract",phonetic:"[ˈæbstrækt]",meaning:"a. 抽象的",example:"Abstract art."},
+{word:"abundant",phonetic:"[əˈbʌndənt]",meaning:"a. 丰富的",example:"Abundant resources."},
+{word:"academic",phonetic:"[ˌækəˈdemɪk]",meaning:"a. 学术的",example:"Academic work."},
+{word:"accept",phonetic:"[əkˈsept]",meaning:"v. 接受",example:"Accept it."},
+{word:"access",phonetic:"[ˈækses]",meaning:"n. 访问",example:"Have access."},
+{word:"accident",phonetic:"[ˈæksɪdənt]",meaning:"n. 事故",example:"Car accident."},
+{word:"accomplish",phonetic:"[əˈkʌmplɪʃ]",meaning:"v. 完成",example:"Accomplish the task."},
+{word:"account",phonetic:"[əˈkaʊnt]",meaning:"n. 账户",example:"Bank account."},
+{word:"achieve",phonetic:"[əˈtʃiːv]",meaning:"v. 实现",example:"Achieve goals."},
+{word:"acknowledge",phonetic:"[əkˈnɒlɪdʒ]",meaning:"v. 承认",example:"Acknowledge it."},
+{word:"acquire",phonetic:"[əˈkwaɪə]",meaning:"v. 获得",example:"Acquire skills."},
+{word:"across",phonetic:"[əˈkrɒs]",meaning:"prep. 穿过",example:"Across the street."},
+{word:"action",phonetic:"[ˈækʃn]",meaning:"n. 行动",example:"Take action."},
+{word:"active",phonetic:"[ˈæktɪv]",meaning:"a. 积极的",example:"Active student."},
+{word:"activity",phonetic:"[ækˈtɪvəti]",meaning:"n. 活动",example:"Outdoor activity."},
+{word:"actor",phonetic:"[ˈæktə]",meaning:"n. 演员",example:"Famous actor."},
+{word:"actual",phonetic:"[ˈæktʃuəl]",meaning:"a. 实际的",example:"Actual result."},
+{word:"adapt",phonetic:"[əˈdæpt]",meaning:"v. 适应",example:"Adapt to change."},
+{word:"add",phonetic:"[æd]",meaning:"v. 添加",example:"Add more."},
+{word:"address",phonetic:"[əˈdres]",meaning:"n. 地址",example:"Home address."},
+{word:"adequate",phonetic:"[ˈædɪkwət]",meaning:"a. 足够的",example:"Adequate time."},
+{word:"adjust",phonetic:"[əˈdʒʌst]",meaning:"v. 调整",example:"Adjust the seat."},
+{word:"admire",phonetic:"[ədˈmaɪə]",meaning:"v. 钦佩",example:"I admire you."},
+{word:"admit",phonetic:"[ədˈmɪt]",meaning:"v. 承认",example:"Admit mistake."},
+{word:"adopt",phonetic:"[əˈdɒpt]",meaning:"v. 采纳",example:"Adopt a plan."},
+{word:"adult",phonetic:"[ˈædʌlt]",meaning:"n. 成人",example:"Young adult."},
+{word:"advance",phonetic:"[ədˈvɑːns]",meaning:"v. 前进",example:"Advance forward."},
+{word:"advantage",phonetic:"[ədˈvɑːntɪdʒ]",meaning:"n. 优势",example:"Big advantage."},
+{word:"adventure",phonetic:"[ədˈventʃə]",meaning:"n. 冒险",example:"Great adventure."},
+{word:"advice",phonetic:"[ədˈvaɪs]",meaning:"n. 建议",example:"Good advice."},
+{word:"advise",phonetic:"[ədˈvaɪz]",meaning:"v. 建议",example:"I advise you."},
+{word:"affair",phonetic:"[əˈfeə]",meaning:"n. 事务",example:"Private affair."},
+{word:"affect",phonetic:"[əˈfekt]",meaning:"v. 影响",example:"Affect the result."},
+{word:"afford",phonetic:"[əˈfɔːd]",meaning:"v. 负担得起",example:"Can't afford."},
+{word:"afraid",phonetic:"[əˈfreɪd]",meaning:"a. 害怕的",example:"I'm afraid."},
+{word:"after",phonetic:"[ˈɑːftə]",meaning:"prep. 之后",example:"After lunch."},
+{word:"again",phonetic:"[əˈɡen]",meaning:"ad. 再次",example:"Try again."},
+{word:"against",phonetic:"[əˈɡenst]",meaning:"prep. 反对",example:"Against the law."},
+{word:"age",phonetic:"[eɪdʒ]",meaning:"n. 年龄",example:"What age?"},
+{word:"agency",phonetic:"[ˈeɪdʒənsi]",meaning:"n. 机构",example:"Travel agency."},
+{word:"agent",phonetic:"[ˈeɪdʒənt]",meaning:"n. 代理人",example:"Insurance agent."},
+{word:"agree",phonetic:"[əˈɡriː]",meaning:"v. 同意",example:"I agree."},
+{word:"agreement",phonetic:"[əˈɡriːmənt]",meaning:"n. 协议",example:"Sign agreement."},
+{word:"ahead",phonetic:"[əˈhed]",meaning:"ad. 向前",example:"Go ahead."},
+{word:"aid",phonetic:"[eɪd]",meaning:"n. 援助",example:"First aid."},
+{word:"aim",phonetic:"[eɪm]",meaning:"v. 瞄准",example:"Aim at target."},
+{word:"air",phonetic:"[eə]",meaning:"n. 空气",example:"Fresh air."},
+{word:"aircraft",phonetic:"[ˈeəkrɑːft]",meaning:"n. 飞机",example:"Military aircraft."},
+{word:"airline",phonetic:"[ˈeəlaɪn]",meaning:"n. 航空公司",example:"International airline."},
+{word:"airport",phonetic:"[ˈeəpɔːt]",meaning:"n. 机场",example:"At the airport."},
+{word:"alarm",phonetic:"[əˈlɑːm]",meaning:"n. 警报",example:"Fire alarm."},
+{word:"album",phonetic:"[ˈælbəm]",meaning:"n. 相册",example:"Photo album."},
+{word:"alive",phonetic:"[əˈlaɪv]",meaning:"a. 活着的",example:"Still alive."},
+{word:"allow",phonetic:"[əˈlaʊ]",meaning:"v. 允许",example:"Not allowed."},
+{word:"almost",phonetic:"[ˈɔːlməʊst]",meaning:"ad. 几乎",example:"Almost done."},
+{word:"alone",phonetic:"[əˈləʊn]",meaning:"a. 单独的",example:"Live alone."},
+{word:"along",phonetic:"[əˈlɒŋ]",meaning:"prep. 沿着",example:"Along the river."},
+{word:"already",phonetic:"[ɔːlˈredi]",meaning:"ad. 已经",example:"Already finished."},
+{word:"also",phonetic:"[ˈɔːlsəʊ]",meaning:"ad. 也",example:"Me too also."},
+{word:"although",phonetic:"[ɔːlˈðəʊ]",meaning:"conj. 虽然",example:"Although tired."},
+{word:"always",phonetic:"[ˈɔːlweɪz]",meaning:"ad. 总是",example:"Always happy."},
+{word:"ambition",phonetic:"[æmˈbɪʃn]",meaning:"n. 雄心",example:"Have ambition."},
+{word:"ambulance",phonetic:"[ˈæmbjələns]",meaning:"n. 救护车",example:"Call ambulance."},
+{word:"among",phonetic:"[əˈmʌŋ]",meaning:"prep. 在…中",example:"Among friends."},
+{word:"amount",phonetic:"[əˈmaʊnt]",meaning:"n. 数量",example:"Large amount."},
+{word:"ancient",phonetic:"[ˈeɪnʃənt]",meaning:"a. 古代的",example:"Ancient history."},
+{word:"anger",phonetic:"[ˈæŋɡə]",meaning:"n. 愤怒",example:"In anger."},
+{word:"angry",phonetic:"[ˈæŋɡri]",meaning:"a. 生气的",example:"Very angry."},
+{word:"animal",phonetic:"[ˈænɪml]",meaning:"n. 动物",example:"Wild animal."},
+{word:"announce",phonetic:"[əˈnaʊns]",meaning:"v. 宣布",example:"Announce news."},
+{word:"annual",phonetic:"[ˈænjuəl]",meaning:"a. 年度的",example:"Annual report."},
+{word:"another",phonetic:"[əˈnʌðə]",meaning:"a. 另一个",example:"Another one."},
+{word:"answer",phonetic:"[ˈɑːnsə]",meaning:"v. 回答",example:"Answer question."},
+{word:"anxiety",phonetic:"[æŋˈzaɪəti]",meaning:"n. 焦虑",example:"Feel anxiety."},
+{word:"anxious",phonetic:"[ˈæŋkʃəs]",meaning:"a. 焦虑的",example:"Very anxious."},
+{word:"any",phonetic:"[ˈeni]",meaning:"a. 任何的",example:"Any question?"},
+{word:"anybody",phonetic:"[ˈenibɒdi]",meaning:"pron. 任何人",example:"Anybody home?"},
+{word:"anyone",phonetic:"[ˈeniwʌn]",meaning:"pron. 任何人",example:"Can anyone help?"},
+{word:"anything",phonetic:"[ˈeniθɪŋ]",meaning:"pron. 任何事",example:"Anything else?"},
+{word:"anyway",phonetic:"[ˈeniweɪ]",meaning:"ad. 无论如何",example:"Anyway, let's go."},
+{word:"anywhere",phonetic:"[ˈeniweə]",meaning:"ad. 任何地方",example:"Go anywhere."},
+{word:"apart",phonetic:"[əˈpɑːt]",meaning:"ad. 分开",example:"Fall apart."},
+{word:"apartment",phonetic:"[əˈpɑːtmənt]",meaning:"n. 公寓",example:"Small apartment."},
+{word:"apologize",phonetic:"[əˈpɒlədʒaɪz]",meaning:"v. 道歉",example:"I apologize."},
+{word:"appear",phonetic:"[əˈpɪə]",meaning:"v. 出现",example:"It appeared."},
+{word:"apple",phonetic:"[ˈæpl]",meaning:"n. 苹果",example:"Eat an apple."},
+{word:"application",phonetic:"[ˌæplɪˈkeɪʃn]",meaning:"n. 申请",example:"Job application."},
+{word:"apply",phonetic:"[əˈplaɪ]",meaning:"v. 申请",example:"Apply for job."},
+{word:"appoint",phonetic:"[əˈpɔɪnt]",meaning:"v. 任命",example:"Appoint manager."},
+{word:"appreciate",phonetic:"[əˈpriːʃieɪt]",meaning:"v. 感激",example:"I appreciate it."},
+{word:"approach",phonetic:"[əˈprəʊtʃ]",meaning:"v. 接近",example:"Approach the door."},
+{word:"appropriate",phonetic:"[əˈprəʊpriət]",meaning:"a. 适当的",example:"Appropriate time."},
+{word:"approve",phonetic:"[əˈpruːv]",meaning:"v. 批准",example:"Approve the plan."},
+{word:"area",phonetic:"[ˈeəriə]",meaning:"n. 区域",example:"This area."},
+{word:"argue",phonetic:"[ˈɑːɡjuː]",meaning:"v. 争论",example:"Don't argue."},
+{word:"arise",phonetic:"[əˈraɪz]",meaning:"v. 出现",example:"Problems arise."},
+{word:"arm",phonetic:"[ɑːm]",meaning:"n. 手臂",example:"My arm hurts."},
+{word:"army",phonetic:"[ˈɑːmi]",meaning:"n. 军队",example:"Join the army."},
+{word:"around",phonetic:"[əˈraʊnd]",meaning:"prep. 周围",example:"Look around."},
+{word:"arrange",phonetic:"[əˈreɪndʒ]",meaning:"v. 安排",example:"Arrange meeting."},
+{word:"arrest",phonetic:"[əˈrest]",meaning:"v. 逮捕",example:"Arrest him."},
+{word:"arrive",phonetic:"[əˈraɪv]",meaning:"v. 到达",example:"Arrive soon."},
+{word:"arrow",phonetic:"[ˈærəʊ]",meaning:"n. 箭",example:"Shoot arrow."},
+{word:"article",phonetic:"[ˈɑːtɪkl]",meaning:"n. 文章",example:"Read article."},
+{word:"artist",phonetic:"[ˈɑːtɪst]",meaning:"n. 艺术家",example:"Great artist."},
+{word:"as",phonetic:"[æz]",meaning:"conj. 当…时",example:"As I said."},
+{word:"ashamed",phonetic:"[əˈʃeɪmd]",meaning:"a. 羞耻的",example:"Feel ashamed."},
+{word:"ask",phonetic:"[ɑːsk]",meaning:"v. 问",example:"Ask him."},
+{word:"asleep",phonetic:"[əˈsliːp]",meaning:"a. 睡着的",example:"Fast asleep."},
+{word:"aspect",phonetic:"[ˈæspekt]",meaning:"n. 方面",example:"This aspect."},
+{word:"assist",phonetic:"[əˈsɪst]",meaning:"v. 帮助",example:"Assist me."},
+{word:"assume",phonetic:"[əˈsjuːm]",meaning:"v. 假设",example:"I assume so."},
+{word:"assure",phonetic:"[əˈʃɔː]",meaning:"v. 保证",example:"I assure you."},
+{word:"at",phonetic:"[æt]",meaning:"prep. 在",example:"At home."},
+{word:"athlete",phonetic:"[ˈæθliːt]",meaning:"n. 运动员",example:"Pro athlete."},
+{word:"atmosphere",phonetic:"[ˈætməsfɪə]",meaning:"n. 气氛",example:"Good atmosphere."},
+{word:"attach",phonetic:"[əˈtætʃ]",meaning:"v. 附上",example:"Attach file."},
+{word:"attack",phonetic:"[əˈtæk]",meaning:"v. 攻击",example:"Attack enemy."},
+{word:"attempt",phonetic:"[əˈtempt]",meaning:"v. 尝试",example:"Attempt to do."},
+{word:"attend",phonetic:"[əˈtend]",meaning:"v. 参加",example:"Attend meeting."},
+{word:"attention",phonetic:"[əˈtenʃn]",meaning:"n. 注意",example:"Pay attention."},
+{word:"attitude",phonetic:"[ˈætɪtjuːd]",meaning:"n. 态度",example:"Good attitude."},
+{word:"attract",phonetic:"[əˈtrækt]",meaning:"v. 吸引",example:"Attract attention."},
+{word:"audience",phonetic:"[ˈɔːdiəns]",meaning:"n. 观众",example:"Large audience."},
+{word:"author",phonetic:"[ˈɔːθə]",meaning:"n. 作者",example:"Book author."},
+{word:"authority",phonetic:"[ɔːˈθɒrəti]",meaning:"n. 权威",example:"Local authority."},
+{word:"automatic",phonetic:"[ˌɔːtəˈmætɪk]",meaning:"a. 自动的",example:"Automatic door."},
+{word:"available",phonetic:"[əˈveɪləbl]",meaning:"a. 可用的",example:"Is it available?"},
+{word:"average",phonetic:"[ˈævərɪdʒ]",meaning:"n. 平均",example:"Average age."},
+{word:"avoid",phonetic:"[əˈvɔɪd]",meaning:"v. 避免",example:"Avoid mistakes."},
+{word:"award",phonetic:"[əˈwɔːd]",meaning:"n. 奖项",example:"Win award."},
+{word:"aware",phonetic:"[əˈweə]",meaning:"a. 意识到的",example:"Be aware."},
+{word:"away",phonetic:"[əˈweɪ]",meaning:"ad. 离开",example:"Go away."},
+{word:"awful",phonetic:"[ˈɔːfl]",meaning:"a. 可怕的",example:"Awful weather."},
+{word:"baby",phonetic:"[ˈbeɪbi]",meaning:"n. 婴儿",example:"Cute baby."},
+{word:"back",phonetic:"[bæk]",meaning:"n. 背部",example:"My back hurts."},
+{word:"background",phonetic:"[ˈbækɡraʊnd]",meaning:"n. 背景",example:"Family background."},
+{word:"bad",phonetic:"[bæd]",meaning:"a. 坏的",example:"Bad weather."},
+{word:"badly",phonetic:"[ˈbædli]",meaning:"ad. 严重地",example:"Badly hurt."},
+{word:"bag",phonetic:"[bæɡ]",meaning:"n. 包",example:"Hand bag."},
+{word:"balance",phonetic:"[ˈbæləns]",meaning:"n. 平衡",example:"Keep balance."},
+{word:"ball",phonetic:"[bɔːl]",meaning:"n. 球",example:"Play ball."},
+{word:"ban",phonetic:"[bæn]",meaning:"v. 禁止",example:"Ban smoking."},
+{word:"banana",phonetic:"[bəˈnɑːnə]",meaning:"n. 香蕉",example:"Eat banana."},
+{word:"bank",phonetic:"[bæŋk]",meaning:"n. 银行",example:"Go to bank."},
+{word:"bar",phonetic:"[bɑː]",meaning:"n. 酒吧",example:"Coffee bar."},
+{word:"base",phonetic:"[beɪs]",meaning:"n. 基础",example:"Base camp."},
+{word:"basic",phonetic:"[ˈbeɪsɪk]",meaning:"a. 基本的",example:"Basic needs."},
+{word:"basket",phonetic:"[ˈbɑːskɪt]",meaning:"n. 篮子",example:"Shopping basket."},
+{word:"basketball",phonetic:"[ˈbɑːskɪtbɔːl]",meaning:"n. 篮球",example:"Play basketball."},
+{word:"bath",phonetic:"[bɑːθ]",meaning:"n. 洗澡",example:"Take a bath."},
+{word:"bathroom",phonetic:"[ˈbɑːθruːm]",meaning:"n. 浴室",example:"Clean bathroom."},
+{word:"battery",phonetic:"[ˈbætri]",meaning:"n. 电池",example:"Battery dead."},
+{word:"battle",phonetic:"[ˈbætl]",meaning:"n. 战斗",example:"Win the battle."},
+{word:"beach",phonetic:"[biːtʃ]",meaning:"n. 海滩",example:"On the beach."},
+{word:"bear",phonetic:"[beə]",meaning:"n. 熊",example:"Polar bear."},
+{word:"beat",phonetic:"[biːt]",meaning:"v. 打败",example:"Beat them."},
+{word:"beautiful",phonetic:"[ˈbjuːtɪfl]",meaning:"a. 美丽的",example:"Beautiful girl."},
+{word:"beauty",phonetic:"[ˈbjuːti]",meaning:"n. 美",example:"Natural beauty."},
+{word:"because",phonetic:"[bɪˈkɒz]",meaning:"conj. 因为",example:"Because of that."},
+{word:"become",phonetic:"[bɪˈkʌm]",meaning:"v. 变成",example:"Become rich."},
+{word:"bed",phonetic:"[bed]",meaning:"n. 床",example:"Go to bed."},
+{word:"bedroom",phonetic:"[ˈbedruːm]",meaning:"n. 卧室",example:"My bedroom."},
+{word:"beer",phonetic:"[bɪə]",meaning:"n. 啤酒",example:"Have a beer."},
+{word:"before",phonetic:"[bɪˈfɔː]",meaning:"prep. 之前",example:"Before dinner."},
+{word:"begin",phonetic:"[bɪˈɡɪn]",meaning:"v. 开始",example:"Begin now."},
+{word:"behavior",phonetic:"[bɪˈheɪvjə]",meaning:"n. 行为",example:"Good behavior."},
+{word:"behind",phonetic:"[bɪˈhaɪnd]",meaning:"prep. 后面",example:"Behind me."},
 {word:"believe",phonetic:"[bɪˈliːv]",meaning:"v. 相信",example:"I believe you."},
-{word:"bell",phonetic:"[bel]",meaning:"n. 铃",example:"The bell rang."},
-{word:"belong",phonetic:"[bɪˈlɒŋ]",meaning:"v. 属于",example:"This book belongs to me."},
-{word:"below",phonetic:"[bɪˈləʊ]",meaning:"prep. 在…下面",example:"The temperature is below zero."},
-{word:"belt",phonetic:"[belt]",meaning:"n. 腰带",example:"He wore a leather belt."},
-{word:"bench",phonetic:"[bentʃ]",meaning:"n. 长椅",example:"They sat on the bench."},
-{word:"bend",phonetic:"[bend]",meaning:"v. 弯曲",example:"Don't bend the rules."},
-{word:"benefit",phonetic:"[ˈbenɪfɪt]",meaning:"n. 好处",example:"Exercise has many benefits."},
-{word:"beside",phonetic:"[bɪˈsaɪd]",meaning:"prep. 在…旁边",example:"She sat beside him."},
-{word:"best",phonetic:"[best]",meaning:"a. 最好的",example:"This is the best solution."},
-{word:"better",phonetic:"[ˈbetə]",meaning:"a. 更好的",example:"This one is better."},
-{word:"between",phonetic:"[bɪˈtwiːn]",meaning:"prep. 在…之间",example:"The meeting is between 2 and 4."},
-{word:"beyond",phonetic:"[bɪˈjɒnd]",meaning:"prep. 超过",example:"It's beyond my understanding."},
-{word:"bicycle",phonetic:"[ˈbaɪsɪkl]",meaning:"n. 自行车",example:"He rides a bicycle to school."},
-{word:"big",phonetic:"[bɪɡ]",meaning:"a. 大的",example:"This is a big city."},
-{word:"bike",phonetic:"[baɪk]",meaning:"n. 自行车",example:"I ride my bike to work."},
-{word:"bill",phonetic:"[bɪl]",meaning:"n. 账单",example:"Can I have the bill?"},
-{word:"billion",phonetic:"[ˈbɪljən]",meaning:"n. 十亿",example:"The company is worth billions."},
-{word:"biology",phonetic:"[baɪˈɒlədʒi]",meaning:"n. 生物学",example:"She studies biology."},
-{word:"bird",phonetic:"[bɜːd]",meaning:"n. 鸟",example:"Birds can fly."},
-{word:"birth",phonetic:"[bɜːθ]",meaning:"n. 出生",example:"The birth of a baby."},
+{word:"bell",phonetic:"[bel]",meaning:"n. 铃",example:"Ring the bell."},
+{word:"belong",phonetic:"[bɪˈlɒŋ]",meaning:"v. 属于",example:"Belong to me."},
+{word:"below",phonetic:"[bɪˈləʊ]",meaning:"prep. 下面",example:"Below zero."},
+{word:"belt",phonetic:"[belt]",meaning:"n. 腰带",example:"Wear belt."},
+{word:"bench",phonetic:"[bentʃ]",meaning:"n. 长椅",example:"Sit on bench."},
+{word:"bend",phonetic:"[bend]",meaning:"v. 弯曲",example:"Bend down."},
+{word:"benefit",phonetic:"[ˈbenɪfɪt]",meaning:"n. 好处",example:"Great benefit."},
+{word:"beside",phonetic:"[bɪˈsaɪd]",meaning:"prep. 旁边",example:"Sit beside me."},
+{word:"best",phonetic:"[best]",meaning:"a. 最好的",example:"Best friend."},
+{word:"better",phonetic:"[ˈbetə]",meaning:"a. 更好的",example:"Much better."},
+{word:"between",phonetic:"[bɪˈtwiːn]",meaning:"prep. 之间",example:"Between us."},
+{word:"beyond",phonetic:"[bɪˈjɒnd]",meaning:"prep. 超过",example:"Beyond words."},
+{word:"bicycle",phonetic:"[ˈbaɪsɪkl]",meaning:"n. 自行车",example:"Ride bicycle."},
+{word:"big",phonetic:"[bɪɡ]",meaning:"a. 大的",example:"Big city."},
+{word:"bike",phonetic:"[baɪk]",meaning:"n. 自行车",example:"By bike."},
+{word:"bill",phonetic:"[bɪl]",meaning:"n. 账单",example:"Pay the bill."},
+{word:"billion",phonetic:"[ˈbɪljən]",meaning:"n. 十亿",example:"Billions of people."},
+{word:"biology",phonetic:"[baɪˈɒlədʒi]",meaning:"n. 生物",example:"Study biology."},
+{word:"bird",phonetic:"[bɜːd]",meaning:"n. 鸟",example:"Flying bird."},
+{word:"birth",phonetic:"[bɜːθ]",meaning:"n. 出生",example:"Date of birth."},
 {word:"birthday",phonetic:"[ˈbɜːθdeɪ]",meaning:"n. 生日",example:"Happy birthday!"},
-{word:"bit",phonetic:"[bɪt]",meaning:"n. 一点",example:"Wait a bit."},
-{word:"bite",phonetic:"[baɪt]",meaning:"v. 咬",example:"The dog might bite."},
-{word:"bitter",phonetic:"[ˈbɪtə]",meaning:"a. 苦的",example:"The medicine tastes bitter."},
-{word:"black",phonetic:"[blæk]",meaning:"a. 黑色的",example:"She wore a black dress."},
+{word:"bit",phonetic:"[bɪt]",meaning:"n. 一点",example:"A little bit."},
+{word:"bite",phonetic:"[baɪt]",meaning:"v. 咬",example:"Don't bite."},
+{word:"bitter",phonetic:"[ˈbɪtə]",meaning:"a. 苦的",example:"Bitter taste."},
+{word:"black",phonetic:"[blæk]",meaning:"a. 黑色的",example:"Black cat."},
 {word:"blame",phonetic:"[bleɪm]",meaning:"v. 责备",example:"Don't blame me."},
-{word:"blanket",phonetic:"[ˈblæŋkɪt]",meaning:"n. 毯子",example:"She covered herself with a blanket."}];
-let todayWords=[];
-let userData=JSON.parse(localStorage.getItem("xiaoduWords"))||{totalDays:0,totalWords:0,currentStreak:0,lastCheckIn:null,learnedWords:[],dayIndex:0};
-let learnedToday=new Set();
+{word:"blanket",phonetic:"[ˈblæŋkɪt]",meaning:"n. 毯子",example:"Warm blanket."},
+{word:"blind",phonetic:"[blaɪnd]",meaning:"a. 盲的",example:"Blind man."}
+];
+
+var todayWords=[];
+var userData=JSON.parse(localStorage.getItem("xiaoduWords"))||{totalDays:0,totalWords:0,currentStreak:0,lastCheckIn:null};
+var learnedToday=0;
+
 function init(){
-    document.getElementById("todayDate").textContent=new Date().toLocaleDateString("zh-CN",{year:"numeric",month:"long",day:"numeric",weekday:"long"});
-    initTodayWords();
+  var today=new Date().toDateString();
+  if(userData.lastCheckIn===today){
+    document.getElementById("checkinBtn").disabled=true;
+    document.getElementById("checkinBtn").textContent="✓ 今日已打卡";
+    document.getElementById("cardTitle").innerHTML="今日单词 <span class='checked-mark'>已打卡</span>";
+  }
+  var seed=new Date().getDate();
+  var start=(seed*7)%vocabulary.length;
+  todayWords=vocabulary.slice(start,start+10);
+  renderWords();
+  updateStats();
 }
-function initTodayWords(){
-    const seed=getDaySeed();
-    let indices=[];
-    for(let i=0;i<vocabulary.length;i++)indices.push(i);
-    for(let i=indices.length-1;i>0;i--){const j=(seed+i)%indices.length;[indices[i],indices[j]]=[indices[j],indices[i]];}
-    todayWords=indices.slice(0,10).map(i=>vocabulary[i]);
-    renderWords();
-    updateStats();
-}
-function getDaySeed(){const today=new Date();return today.getFullYear()*10000+(today.getMonth()+1)*100+today.getDate();}
+
 function renderWords(){
-    const list=document.getElementById("wordList");
-    list.innerHTML=todayWords.map((item,index)=>`<div class="word-item" onclick="toggleWord(${index})"><div class="word-header"><div class="word-title">${index+1}. ${item.word}</div><button class="sound-btn" onclick="event.stopPropagation();speakWord('${item.word}')">🔊</button></div><div class="word-phonetic">${item.phonetic}</div><div class="word-meaning">${item.meaning}</div><div class="word-example">${item.example}</div></div>`).join("");
+  var html="";
+  for(var i=0;i<todayWords.length;i++){
+    var w=todayWords[i];
+    html+='<div class="word-item" onclick="toggleWord(this)">';
+    html+='<div class="word-title">'+(i+1)+'. '+w.word+'</div>';
+    html+='<div class="word-phonetic">'+w.phonetic+'</div>';
+    html+='<div class="word-meaning">'+w.meaning+'</div>';
+    html+='<div class="word-example">'+w.example+'</div>';
+    html+='</div>';
+  }
+  document.getElementById("wordList").innerHTML=html;
 }
-function toggleWord(index){
-    const items=document.querySelectorAll(".word-item");
-    items[index].classList.toggle("expanded");
-    learnedToday.add(index);
-    document.getElementById("progress").textContent=`${learnedToday.size}/10`;
+
+function toggleWord(el){
+  el.classList.toggle("expanded");
+  learnedToday++;
 }
-function speakWord(word){const utterance=new SpeechSynthesisUtterance(word);utterance.lang="en-US";speechSynthesis.speak(utterance);}
-function updateStats(){document.getElementById("totalDays").textContent=userData.totalDays;document.getElementById("totalWords").textContent=userData.totalWords;document.getElementById("currentStreak").textContent=userData.currentStreak;updateBadges();}
-function updateBadges(){
-    const badges=[];
-    if(userData.totalDays>=7)badges.push('<span class="badge earned">🏆 周满勤</span>');
-    if(userData.totalDays>=30)badges.push('<span class="badge earned">🏅 月满勤</span>');
-    if(userData.totalDays>=100)badges.push('<span class="badge earned">💎 百日达人</span>');
-    if(userData.totalWords>=1000)badges.push('<span class="badge earned">📚 千词达人</span>');
-    document.getElementById("badgeList").innerHTML=badges.join("");
+
+function updateStats(){
+  document.getElementById("totalDays").textContent=userData.totalDays;
+  document.getElementById("totalWords").textContent=userData.totalWords;
+  document.getElementById("currentStreak").textContent=userData.currentStreak;
 }
+
 function checkIn(){
-    if(learnedToday.size<10){alert("请先学习完今天的10个单词！");return;}
-    const today=new Date().toDateString();
-    if(userData.lastCheckIn===today){alert("今天已经打卡过了！");return;}
-    userData.totalDays++;
-    userData.totalWords+=10;
-    const yesterday=new Date();yesterday.setDate(yesterday.getDate()-1);
-    if(userData.lastCheckIn===yesterday.toDateString()){userData.currentStreak++;}else{userData.currentStreak=1;}
-    userData.lastCheckIn=today;
-    localStorage.setItem("xiaoduWords",JSON.stringify(userData));
-    updateStats();
-    document.getElementById("successModal").classList.add("show");
+  var today=new Date().toDateString();
+  if(userData.lastCheckIn===today){
+    alert("今天已经打卡过了！");
+    return;
+  }
+  userData.totalDays++;
+  userData.totalWords+=10;
+  var yesterday=new Date();
+  yesterday.setDate(yesterday.getDate()-1);
+  if(userData.lastCheckIn===yesterday.toDateString()){
+    userData.currentStreak++;
+  }else{
+    userData.currentStreak=1;
+  }
+  userData.lastCheckIn=today;
+  localStorage.setItem("xiaoduWords",JSON.stringify(userData));
+  updateStats();
+  document.getElementById("checkinBtn").disabled=true;
+  document.getElementById("checkinBtn").textContent="✓ 今日已打卡";
+  document.getElementById("cardTitle").innerHTML="今日单词 <span class='checked-mark'>已打卡</span>";
+  document.getElementById("successModal").classList.add("show");
 }
-function closeModal(){document.getElementById("successModal").classList.remove("show");}
+
+function closeModal(){
+  document.getElementById("successModal").classList.remove("show");
+}
+
 init();
 </script>
 </body>
