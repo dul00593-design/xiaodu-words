@@ -1,83 +1,295 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>小杜的单词打卡</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
-        .container { max-width: 400px; margin: 0 auto; }
-        .header { text-align: center; color: white; margin-bottom: 20px; }
-        .header h1 { font-size: 24px; margin-bottom: 5px; }
-        .subtitle { font-size: 14px; opacity: 0.9; }
-        .date { font-size: 12px; opacity: 0.8; margin-top: 5px; }
-        .stats-card, .word-card { background: white; border-radius: 16px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; text-align: center; }
-        .stat-item .number { font-size: 28px; font-weight: bold; color: #667eea; }
-        .stat-item .label { font-size: 12px; color: #666; margin-top: 5px; }
-        .word-card h2 { font-size: 16px; margin-bottom: 15px; color: #333; display: flex; justify-content: space-between; align-items: center; }
-        .progress { font-size: 14px; color: #667eea; }
-        .word-item { padding: 15px; border-bottom: 1px solid #f0f0f0; cursor: pointer; }
-        .word-item:last-child { border-bottom: none; }
-        .word-header { display: flex; justify-content: space-between; align-items: center; }
-        .word-title { font-size: 18px; font-weight: bold; color: #333; }
-        .sound-btn { background: none; border: none; font-size: 20px; cursor: pointer; padding: 5px; }
-        .sound-btn:hover { transform: scale(1.2); }
-        .word-phonetic { font-size: 14px; color: #667eea; margin: 5px 0; }
-        .word-meaning { font-size: 14px; color: #666; }
-        .word-example { font-size: 13px; color: #999; font-style: italic; display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #e0e0e0; }
-        .word-item.expanded .word-example { display: block; }
-        .checkin-btn { width: 100%; padding: 18px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .checkin-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
-        .modal.show { display: flex; }
-        .modal-content { background: white; border-radius: 20px; padding: 30px; text-align: center; max-width: 300px; }
-        .modal-content .icon { font-size: 60px; margin-bottom: 15px; }
-        .modal-content h3 { font-size: 20px; margin-bottom: 10px; }
-        .modal-content button { padding: 12px 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
-        .badge-list { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 10px; }
-        .badge { font-size: 11px; padding: 4px 8px; border-radius: 10px; background: #f0f0f0; color: #666; }
-        .badge.earned { background: linear-gradient(135deg, #ffd700, #ffaa00); color: #fff; }
-        .tip { font-size: 12px; color: #999; text-align: center; margin-top: 15px; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>小杜的单词打卡</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,sans-serif;background:linear-gradient(135deg,#667eea,#764ba2);min-height:100vh;padding:20px}
+.container{max-width:400px;margin:0 auto}
+.header{text-align:center;color:white;margin-bottom:20px}
+.header h1{font-size:24px;margin-bottom:5px}
+.subtitle{font-size:14px;opacity:.9}
+.date{font-size:12px;opacity:.8;margin-top:5px}
+.stats-card,.word-card{background:white;border-radius:16px;padding:20px;margin-bottom:15px;box-shadow:0 4px 20px rgba(0,0,0,.1)}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;text-align:center}
+.stat-item .number{font-size:28px;font-weight:bold;color:#667eea}
+.stat-item .label{font-size:12px;color:#666;margin-top:5px}
+.word-card h2{font-size:16px;margin-bottom:15px;color:#333;display:flex;justify-content:space-between}
+.progress{font-size:14px;color:#667eea}
+.word-item{padding:15px;border-bottom:1px solid #f0f0f0;cursor:pointer}
+.word-item:last-child{border-bottom:none}
+.word-header{display:flex;justify-content:space-between;align-items:center}
+.word-title{font-size:18px;font-weight:bold;color:#333}
+.sound-btn{background:none;border:none;font-size:20px;cursor:pointer;padding:5px}
+.sound-btn:hover{transform:scale(1.2)}
+.word-phonetic{font-size:14px;color:#667eea;margin:5px 0}
+.word-meaning{font-size:14px;color:#666}
+.word-example{font-size:13px;color:#999;font-style:italic;display:none;margin-top:10px;padding-top:10px;border-top:1px dashed #e0e0e0}
+.word-item.expanded .word-example{display:block}
+.checkin-btn{width:100%;padding:18px;background:linear-gradient(135deg,#667eea,#764ba2);color:white;border:none;border-radius:12px;font-size:18px;font-weight:bold;cursor:pointer;margin-top:10px}
+.checkin-btn:disabled{opacity:.6;cursor:not-allowed}
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:1000;justify-content:center;align-items:center}
+.modal.show{display:flex}
+.modal-content{background:white;border-radius:20px;padding:30px;text-align:center;max-width:300px}
+.modal-content .icon{font-size:60px;margin-bottom:15px}
+.modal-content h3{font-size:20px;margin-bottom:10px}
+.modal-content button{padding:12px 30px;background:linear-gradient(135deg,#667eea,#764ba2);color:white;border:none;border-radius:8px;font-size:16px;cursor:pointer}
+.badge-list{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:10px}
+.badge{font-size:11px;padding:4px 8px;border-radius:10px;background:#f0f0f0;color:#666}
+.badge.earned{background:linear-gradient(135deg,#ffd700,#ffaa00);color:#fff}
+.tip{font-size:12px;color:#999;text-align:center;margin-top:15px}
+</style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>📚 小杜的单词打卡</h1>
-            <p class="subtitle">每天10个，高考无忧</p>
-            <p class="date" id="todayDate"></p>
-        </div>
-        <div class="stats-card">
-            <div class="stats-grid">
-                <div class="stat-item"><div class="number" id="totalDays">0</div><div class="label">坚持天数</div></div>
-                <div class="stat-item"><div class="number" id="totalWords">0</div><div class="label">已学单词</div></div>
-                <div class="stat-item"><div class="number" id="currentStreak">0</div><div class="label">连续打卡</div></div>
-            </div>
-            <div class="badge-list" id="badgeList"></div>
-        </div>
-        <div class="word-card">
-            <h2>今日单词 <span class="progress" id="progress">0/10</span></h2>
-            <div id="wordList"></div>
-            <button class="checkin-btn" id="checkinBtn" onclick="checkIn()">完成今日打卡</button>
-        </div>
-        <p class="tip">💡 点击单词查看例句，点击🔊听发音</p>
-    </div>
-    <div class="modal" id="successModal">
-        <div class="modal-content">
-            <div class="icon">🎉</div>
-            <h3>打卡成功！</h3>
-            <p id="streakMsg">太棒了！继续保持！</p>
-            <button onclick="closeModal()">好的</button>
-        </div>
-    </div>
+<div class="container">
+<div class="header">
+<h1>📚 小杜的单词打卡</h1>
+<p class="subtitle">每天10个，高考无忧</p>
+<p class="date" id="todayDate"></p>
+</div>
+<div class="stats-card">
+<div class="stats-grid">
+<div class="stat-item"><div class="number" id="totalDays">0</div><div class="label">坚持天数</div></div>
+<div class="stat-item"><div class="number" id="totalWords">0</div><div class="label">已学单词</div></div>
+<div class="stat-item"><div class="number" id="currentStreak">0</div><div class="label">连续打卡</div></div>
+</div>
+<div class="badge-list" id="badgeList"></div>
+</div>
+<div class="word-card">
+<h2>今日单词 <span class="progress" id="progress">0/10</span></h2>
+<div id="wordList"></div>
+<button class="checkin-btn" id="checkinBtn" onclick="checkIn()">完成今日打卡</button>
+</div>
+<p class="tip">💡 点击单词查看例句，点击🔊听发音</p>
+</div>
+<div class="modal" id="successModal">
+<div class="modal-content">
+<div class="icon">🎉</div>
+<h3>打卡成功！</h3>
+<p id="streakMsg">太棒了！继续保持！</p>
+<button onclick="closeModal()">好的</button>
+</div>
+</div>
 <script>
-const VOCAB_URL='https://raw.githubusercontent.com/wordswitch/wordswitch/master/data/words.txt';
-let vocabulary=[];
-let todayWords=[];
-let userData=JSON.parse(localStorage.getItem('xiaoduWords'))||{totalDays:0,totalWords:0,currentStreak:0,lastCheckIn:null,learnedWords:[],dayIndex:0};
-let learnedToday=new Set();
-function init(){document.getElementById('todayDate').textContent=new Date().toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric',weekday:'long'});loadVocabulary();}
-async function loadVocabulary(){try{const cache=localStorage.getItem('vocabularyCache');const cacheTime=localStorage.getItem('vocabularyCacheTime');if(cache&&cacheTime&&Date.now()-cacheTime<86400000){vocabulary=JSON.parse(cache);initTodayWords();}else{const res=await fetch(VOCAB_URL);const text=await res.text();vocabulary=text.split('\n').filter(w=>w.trim().length>2&&w.trim().length<15).map(w=>({word:w.trim().toLowerCase(),phonetic:'[点击🔊听发音]',meaning:'查看词典释义',example:'Practice makes perfect.'}));localStorage.setItem('vocabularyCache',JSON.stringify(vocabulary));localStorage.setItem('vocabularyCacheTime',Date.now());initTodayWords();}}catch(e){vocabulary=generateSampleWords();initTodayWords();}}
-function generateSampleWords(){const words=['abandon','ability','able','abnormal','aboard','abolish','about','above','abroad','absence','absolute','absorb','abstract','abundant','academic','accept','access','accident','accommodation','accompany','accomplish','according','account','accurate','achieve','acknowledge','acquire','across','action','active','activity','actual','adapt','add','addition','address','adequate','adjust','admire','admit','adopt','adult','advance','advantage','adventure','advertise','advice','advise','affair','affect','afford','afraid','after','again','against','age','agency','agent','agree','agreement','ahead','aid','aim','air','aircraft','airline','airport','alarm','album','alcohol','alive','allow','almost','alone','along','already','also','alter','alternative','although','always','amaze','ambition','ambulance','among','amount','amuse','analyze','ancient','anger','angle','angry','animal','announce','annoy','annual','another','answer','anxiety','anxious','any','anybody','anyone','anything','anyway','anywhere','apart','apartment','apologize','apparent','appeal','appear','appearance','appetite','apple','application','apply','appoint','appointment','appreciate','approach','appropriate','approve','architect','architecture','area','argue','argument','arise','arm','army','around','arrange','arrangement','arrest','arrival','arrive','arrow','article','artificial','artist','as','ashamed','aside','ask','asleep','aspect','assess','assign','assist','assistance','associate','assume','assure','astonish','athlete','atmosphere','attach','attack','attempt','attend','attention','attitude','attract','attraction','attractive','audience','author','authority','automatic','available','average','avoid','awake','award','aware','away','awful','baby','back','background','bad','badly','bag','balance','ball','ballet','ban','banana','band','bank','bar','barbecue','barber','bare','bargain','barrier','base','baseball','basement','basic','basket','basketball','bath','bathe','bathroom','battery','battle','bay','beach','bean','bear','beard','beast','beat','beautiful','beauty','because','become','bed','bedroom','beef','beer','before','beg','begin','behave','behavior','behind','being','belief','believe','bell','belong','below','belt','bench','bend','beneath','benefit','beside','besides','best','bet','better','between','beyond','bicycle','bid','big','bike','bill','billion','bind','biology','bird','birth','birthday','biscuit','bit','bite','bitter','black','blackboard','blame','blanket','blind','block','blood','blouse','blow','blue','board','boat','body','boil','bomb','bone','book','boot','border','bored','boring','born','borrow','boss','both','bother','bottle','bottom','bound','boundary','bowl','box','boy','brain','brake','branch','brand','brave','bread','break','breakfast','breast','breath','breathe','brick','bridge','brief','bright','brilliant','bring','broad','broadcast','broom','brother','brown','brush','brutal','bubble','bucket','budget','build','building','bullet','bunch','burden','burn','burst','bury','bus','bush','business','busy','but','butcher','butter','button','buy','buyer','by','cabbage','cafe','cage','cake','calculate','call','calm','camera','camp','campaign','campus','can','canal','cancel','cancer','candidate','candle','candy','canteen','cap','capital','captain','caption','capture','car','carbon','card','care','career','careful','careless','cargo','carpet','carriage','carrot','carry','cartoon','carve','case','cash','cast','castle','casual','cat','catalogue','catch','category','cattle','cause','caution','cave','cease','ceiling','celebrate','celebration','celebrity','cell','cellar','cent','centigrade','centimetre','central','centre','century','ceremony','certain','certificate','chain','chair','chairman','chalk','challenge','champion','chance','change','changeable','channel','chant','chapter','character','characteristic','charge','charity','charm','chart','chat','cheap','cheat','check','cheek','cheer','cheerful','cheese','chef','chemical','chemist','chemistry','cheque','cherry','chess','chest','chew','chicken','chief','child','childhood','chimney','chin','china','chip','chocolate','choice','choir','choose','chop','christian','christmas','church','cigar','cigarette','cinema','circle','circus','citizen','city','civil','claim','clap','clarify','class','classic','classical','classmate','classroom','claw','clay','clean','cleaner','clear','clerk','clever','click','climate','climb','clinic','clock','clone','close','cloth','clothes','clothing','cloud','cloudy','club','clumsy','coach','coal','coast','coat','code','coffee','coin','coincidence','cold','collar','colleague','collect','collection','college','colour','comb','combine','come','comedy','comfort','comfortable','command','comment','commercial','committee','common','communicate','communication','communism','communist','companion','company','compare','comparison','compete','competence','competition','competitor','complain','complaint','complete','complex','complicated','component','compose','composition','comprehension','compulsory','computer','concentrate','concept','concern','concert','conclude','conclusion','concrete','condition','conduct','conductor','conference','confident','confirm','conflict','confuse','congratulate','congratulation','connect','connection','conscience','consensus','consequence','conservation','conservative','consider','considerate','consideration','consist','consistent','constant','constitution','construct','construction','consult','consultant','consume','consumer','contact','contain','container','contemporary','content','contest','context','continent','continue','contract','contradict','contrary','contrast','contribute','contribution','control','controversial','convenience','convenient','conventional','conversation','convert','convey','convince','cook','cooker','cookie','cool','copy','copyright','cord','core','corn','corner','corporation','correct','correction','correspond','corrupt','cost','cosy','cottage','cotton','cough','could','council','count','counter','country','countryside','county','couple','courage','course','court','courtyard','cousin','cover','cow','cowboy','crack','craft','crash','crawl','crazy','cream','create','creative','creature','credit','crew','crime','criminal','crisis','criterion','critic','critical','criticise','criticism','criticize','crop','cross','crossing','crossroads','crowd','crowded','cruel','cruelty','crush','cry','crystal','cube','cucumber','culture','cup','cupboard','cure','curious','currency','current','curriculum','curtain','cushion','custom','customer','customs','cut','cycle','cyclist','dad','daily','dairy','dam','damage','damp','dance','danger','dangerous','dare','dark','darkness','dash','data','database','date','daughter','dawn','day','dead','deadline','deaf','deal','dealer','dear','death','debate','debt','decade','decay','deceive','december','decent','decide','decision','declare','decline','decorate','decoration','decrease','dedicate','deed','deep','deeply','deer','defeat','defence','defend','define','definite','definitely','definition','degree','delay','deliberate','delicate','delicious','delight','delighted','deliver','demand','democracy','demonstrate','demonstration','deny','depart','department','departure','depend','deposit','depress','depression','depth','describe','description','desert','deserve','design','designer','desire','desk','desperate','despite','dessert','destination','destroy','destruction','detail','detailed','detect','determine','develop','development','devote','devotion','diagram','dial','dialogue','diamond','diary','dictation','dictionary','die','diet','differ','difference','different','difficult','difficulty','dig','digest','digital','dignity','dilemma','dimension','dinner','dinosaur','dioxide','dip','diploma','direct','direction','director','directory','dirty','disabled','disadvantage','disagree','disagreement','disappear','disappoint','disappointed','disappointing','disappointment','disaster','discount','discourage','discover','discovery','discrimination','discuss','discussion','disease','dish','disk','dislike','dismiss','disobey','disorder','display','dispute','distance','distant','distinct','distinction','distinguish','distribute','distribution','district','disturb','disturbing','dive','diverse','diversity','divide','division','divorce','dizzy','do','doctor','document','documentary','dog','doll','dollar','donate','donation','donkey','door','dormitory','dot','double','doubt','down','download','downstairs','downtown','downward','dozen','draft','drag','dragon','draw','drawer','drawing','dream','dress','drill','drink','drive','driver','drop','drown','drug','drum','drunk','dry','duck','due','dull','dumpling','during','dusk','dust','dusty','duty','dynamic','dynasty','each','eager','eagle','ear','early','earn','earth','earthquake','ease','easily','east','eastern','easy','eat','edge','edition','editor','educate','education','educator','effect','effective','effort','egg','ego','eight','either','elder','elect','election','electric','electrical','electricity','electronic','elegant','element','elephant','eleven','else','email','embarrass','embassy','emergency','emperor','empire','employ','employee','employer','empty','encourage','encouragement','end','endless','enemy','energy','engine','engineer','enjoy','enjoyable','enlarge','enough','ensure','enter','enterprise','entertainment','entire','entrance','entry','envelope','environment','envy','equal','equality','equip','equipment','eraser','error','erupt','escape','especially','essay','essential','establish','estate','estimate','etc','europe','european','evaluate','eve','even','evening','event','eventually','ever','every','everybody','everyday','everyone','everything','everywhere','evidence','evolution','exact','exactly','exam','examination','examine','example','excellent','except','exchange','excite','excited','excitement','exciting','excuse','exercise','exhibition','exist','existence','exit','expand','expansion','expect','expectation','expense','expensive','experience','experiment','expert','explain','explanation','explicit','explode','explore','explorer','export','expose','express','expression','extend','extension','extensive','extent','external','extra','extraordinary','extreme','extremely','eye','eyesight','face','facility','fact','factor','factory','faculty','fade','fail','failure','fair','fairly','faith','fall','false','fame','familiar','family','famous','fan','fancy','fantastic','fantasy','far','fare','farm','farmer','fashion','fast','fasten','fat','father','fault','favour','favourite','fear','feather','feature','february','fee','feed','feedback','feel','feeling','fellow','female','fence','festival','fetch','fever','few','fibre','fiction','field','fierce','fifteen','fifth','fifty','fight','figure','file','fill','film','filter','final','finally','finance','find','finding','fine','finger','finish','fire','firefighter','firm','first','fish','fist','fit','fitness','five','fix','flag','flame','flash','flashlight','flat','flavor','flee','flesh','flexible','flight','float','flood','floor','flour','flow','flower','flu','fly','focus','fog','foggy','fold','folk','follow','following','fond','food','fool','foolish','foot','football','for','forbid','force','forecast','forehead','foreign','foreigner','foresee','forest','forever','forget','forgive','fork','form','format','former','formula','forth','fortune','forty','forward','found','foundation','fountain','four','fourth','fox','fragile','fragment','frame','free','freedom','freeway','freeze','freezing','frequent','fresh','fridge','friend','friendly','friendship','frighten','frightened','frog','from','front','frontier','frost','frown','fruit','fry','fuel','full','fully','fun','function','fund','funny','fur','furniture','further','future','gain','gallery','game','gap','garage','garbage','garden','garlic','garment','gas','gate','gather','gauge','gay','general','generation','generous','gentle','gentleman','geography','geometry','gesture','get','ghost','giant','gift','gifted','girl','give','glad','glance','glare','glass','glimpse','global','globe','glory','glove','goal','goat','god','gold','golden','golf','good','goods','goose','govern','government','governor','grade','gradually','graduate','graduation','grain','grammar','grand','grandchild','granddaughter','grandfather','grandmother','grandparent','grandson','granny','grant','grape','graph','grasp','grass','grateful','grave','gravity','gray','great','greedy','green','greengrocer','greet','greeting','grey','grocer','grocery','gross','ground','group','grow','growth','guarantee','guard','guess','guest','guidance','guide','guilty','guitar','gun','gym','gymnasium','habit','hair','haircut','half','hall','ham','hamburger','hammer','hand','handful','handle','handsome','handwriting','hang','happen','happiness','happy','harbour','hard','hardly','hardship','harm','harmful','harmony','harvest','hat','hatch','hate','have','he','head','headache','headline','headmaster','health','healthy','hear','hearing','heart','heat','heaven','heavy','height','helicopter','hello','helmet','help','helpful','hen','hence','her','herb','here','hero','herself','hesitate','hey','hide','high','highlight','highway','hill','him','himself','hint','hip','hire','his','history','hit','hi-tech','hobby','hockey','hold','hole','holiday','hollow','holy','home','homeland','hometown','homework','honest','honey','honour','hook','hope','hopeful','hopeless','horizon','horn','horrible','horse','hospital','host','hostess','hot','hotdog','hotel','hour','house','housewife','housework','however','howl','hug','huge','human','human being','humble','humour','hunger','hungry','hunt','hunter','hurricane','hurry','hurt','husband','hydrogen','I','ice','ice cream','idea','ideal','identify','identity','idiom','ignore','ill','illegal','illness','illustrate','illustration','image','imagination','imagine','imitate','immediate','immediately','immigration','impact','imply','import','importance','important','impose','impossible','impress','impression','impressive','improve','improvement','in','inch','incident','include','income','incorporate','increase','indeed','independence','independent','index','indicate','industry','influence','inform','information','initial','injure','injury','ink','inn','inner','innocent','input','inquiry','insect','insert','inside','insist','inspect','inspire','install','instance','instant','instead','institute','institution','instruct','instruction','instrument','insurance','intelligence','intelligent','intend','intention','interest','interesting','internal','international','internet','interpret','interpreter','interrupt','interval','interview','into','introduce','introduction','invent','invention','inventor','invest','investigate','investigation','investment','invite','invitation','involve','iron','island','isolate','issue','it','item','its','itself','jacket','jaguar','jam','january','jar','jaw','jazz','jeans','jeep','jet','jewel','jewelry','job','jog','join','joint','joke','journal','journalist','journey','joy','judge','judgment','juice','juicy','july','jump','june','jungle','junior','just','justice','justify','keen','keep','kettle','key','keyboard','kick','kid','kill','kilo','kilogram','kilometre','kind','kindergarten','kindness','king','kingdom','kiss','kit','kitchen','kite','knee','knife','knock','know','knowledge','lab','labour','lack','lady','lake','lamb','lame','lamp','land','landscape','lane','language','lap','laptop','large','largely','laser','last','late','lately','later','latest','latter','laugh','laughter','launch','laundry','law','lawyer','lay','layer','lazy','lead','leader','leadership','leading','leaf','league','leak','learn','learned','least','leather','leave','lecture','left','left-handed','leg','legal','lemon','lemonade','lend','length','lesson','let','letter','level','liberation','liberty','library','licence','lid','lie','life','lifeguard','lifestyle','lifetime','lift','light','lightning','like','likely','limit','limitation','limited','line','link','lion','lip','liquid','list','listen','literature','litre','little','live','lively','living','load','loaf','local','locate','location','lock','log','logic','lonely','long','look','loose','lorry','lose','loss','lost','lot','loud','loudly','lounge','love','lovely','lover','low','lower','luck','lucky','luggage','lunch','lung','machine','mad','madam','magazine','magic','magical','maid','mail','mailbox','main','mainland','major','majority','make','male','mammal','man','manage','management','manager','manner','many','map','maple','marathon','marble','march','march','margin','mark','market','marriage','marry','marvelous','mask','mass','massive','master','mat','match','mate','material','mathematics','matter','mature','maximum','may','maybe','mayor','me','meal','mean','meaning','means','meanwhile','measure','measurement','meat','mechanic','medal','media','medical','medicine','medium','meet','meeting','melon','melt','member','memorial','memory','mend','mental','mentally','mention','menu','merchant','mercy','mere','merely','merit','mess','message','metal','method','metre','metric','microscope','microwave','middle','midnight','might','mild','mile','milk','million','millionaire','mind','mine','mineral','minimum','minister','ministry','minor','minority','minute','mirror','miss','missile','missing','mission','mistake','mix','mixture','mobile','model','modem','modern','modest','mom','moment','mommy','money','monitor','monk','monkey','month','monument','mood','moon','moral','more','morning','mosquito','most','mostly','mother','motherland','motion','motor','motorcycle','motto','mountain','mountainous','mouse','moustache','mouth','move','movement','movie','much','mud','multiply','mum','mummy','municipal','museum','mushroom','music','musical','musician','must','mutton','my','myself','mystery','nail','name','narrow','nasty','nation','national','nationality','native','natural','nature','navy','near','nearby','nearly','neat','necessary','necessity','neck','necklace','need','needle','negative','negotiate','negotiation','neighbour','neighbourhood','neither','nephew','nerve','nervous','nest','net','network','never','nevertheless','new','news','newspaper','next','nice','niece','night','nightclub','nightmare','nine','no','noble','nobody','nod','noise','noisy','none','nonsense','noodle','noon','nor','normal','normally','north','northeast','northern','northwest','nose','not','note','notebook','nothing','notice','novel','november','now','nowadays','nowhere','nuclear','number','numerous','nurse','nursery','nut','nutrition','obey','object','observe','obtain','obvious','obviously','occasion','occasional','occasionally','occupation','occupy','occur','ocean','o'clock','october','odd','of','off','offence','offend','offer','office','officer','official','often','oh','oil','okay','old','olympic','omit','on','once','one','oneself','onion','only','onto','open','opening','opera','operate','operation','operator','opinion','opponent','opportunity','oppose','opposite','opposition','option','or','oral','orange','orbit','order','ordinary','organ','organic','organism','organize','organization','origin','original','other','otherwise','ought','our','ours','ourselves','out','outcome','outdoor','outer','outline','output','outside','outstanding','outward','oven','over','overall','overcoat','overcome','overlook','overweight','owe','own','owner','ownership','ox','oxygen','pace','pacific','pack','package','packet','page','pain','painful','paint','painter','painting','pair','palace','pale','pan','panda','panic','paper','paragraph','parallel','parcel','pardon','parent','park','parking','parrot','part','participate','particular','particularly','partly','partner','part-time','party','pass','passage','passenger','passer-by','passion','passive','passport','past','pat','path','patience','patient','pattern','pause','pay','payment','peace','peaceful','peach','pear','peasant','pen','pencil','penny','pension','people','pepper','per','percent','percentage','perfect','perfectly','perform','performance','perfume','perhaps','period','permanent','permission','permit','person','personal','personality','personally','personnel','persuade','pet','petrol','phenomenon','philosophy','phone','photo','photograph','photographer','phrase','physical','physician','physics','pianist','piano','pick','picnic','picture','pie','piece','pig','pile','pill','pillar','pillow','pilot','pin','pine','pink','pioneer','pipe','pity','pizza','place','plain','plan','plane','planet','plant','plastic','plate','platform','play','player','playground','plea','pleasant','please','pleased','pleasure','plenty','plot','plug','plus','pocket','poem','poet','point','poison','poisonous','pole','police','policeman','policy','polish','polite','political','politician','politics','pollute','pollution','pond','pool','poor','pop','popular','population','pork','porridge','port','portable','porter','portion','portrait','pose','position','positive','possess','possession','possibility','possible','possibly','post','postage','postcard','postman','postpone','pot','potato','potential','pound','pour','poverty','powder','power','powerful','practical','practice','practise','praise','pray','prayer','precious','precise','precision','predict','prefer','preference','pregnant','prejudice','premier','preparation','prepare','prescription','presence','present','presentation','preserve','president','press','pressure','pretend','pretty','prevent','preview','previous','price','pride','primary','primary school','prime','prince','princess','principal','principle','print','printer','printing','prior','priority','prison','prisoner','private','privilege','prize','probably','problem','procedure','proceed','process','produce','producer','product','production','profession','professional','professor','profit','program','progress','project','prominent','promise','promote','prompt','pronounce','pronunciation','proof','proper','properly','property','proposal','propose','prospect','protect','protection','protein','protest','proud','prove','provide','provided','province','psychology','pub','public','publication','publish','publisher','pull','pulse','pump','punch','punctual','punctuation','punish','punishment','pupil','purchase','pure','purple','purpose','purse','pursue','pursuit','push','put','puzzle','puzzled','pyramid','quality','quantity','quarrel','quarter','queen','question','quick','quiet','quit','quite','quiz','race','racial','radar','radiation','radio','radioactive','radius','rag','rail','railway','rain','rainbow','raincoat','rainy','raise','range','rank','rapid','rare','rat','rate','rather','raw','ray','reach','react','reaction','read','reader','reading','ready','real','realistic','reality','realize','really','reason','reasonable','rebel','rebuild','receipt','receive','receiver','recent','recently','reception','recipe','recite','recognize','recommend','record','recover','recreation','recycle','red','reduce','refer','reference','reflect','reform','refresh','refrigerator','refuse','regard','regardless','region','register','regret','regular','regulation','reject','relate','relation','relative','relax','relay','relevant','reliable','relief','religion','religious','rely','remain','remarkable','remember','remind','remote','remove','rent','repair','repeat','replace','reply','report','reporter','represent','representative','republic','reputation','request','require','rescue','research','resemble','reserve','resist','resolution','resolve','resort','resource','respect','respond','response','responsibility','responsible','rest','restaurant','restore','restrict','result','retell','retire','return','reveal','review','revision','revolution','reward','rhythm','rice','rich','rid','ride','ridiculous','right','ring','riot','ripe','rise','risk','ritual','rival','river','road','roast','rob','robot','rock','rocket','role','
+const vocabulary=[
+{word:"abandon",phonetic:"[əˈbændən]",meaning:"v. 抛弃，放弃",example:"He abandoned his car in the snow."},
+{word:"ability",phonetic:"[əˈbɪləti]",meaning:"n. 能力；才能",example:"She has the ability to speak four languages."},
+{word:"able",phonetic:"[ˈeɪbl]",meaning:"a. 能够的",example:"I was able to solve the problem."},
+{word:"abnormal",phonetic:"[æbˈnɔːml]",meaning:"a. 反常的",example:"The test showed an abnormal level."},
+{word:"aboard",phonetic:"[əˈbɔːd]",meaning:"prep. 在船/飞机上",example:"Welcome aboard Flight 123."},
+{word:"abolish",phonetic:"[əˈbɒlɪʃ]",meaning:"v. 废除",example:"The government plans to abolish the law."},
+{word:"about",phonetic:"[əˈbaʊt]",meaning:"prep. 关于",example:"What are you talking about?"},
+{word:"above",phonetic:"[əˈbʌv]",meaning:"prep. 在…上面",example:"The temperature is above average."},
+{word:"abroad",phonetic:"[əˈbrɔːd]",meaning:"ad. 到国外",example:"She studies abroad in the US."},
+{word:"absence",phonetic:"[ˈæbsəns]",meaning:"n. 缺席",example:"His absence was noted by the teacher."},
+{word:"absolute",phonetic:"[ˈæbsəluːt]",meaning:"a. 绝对的",example:"It is an absolute necessity."},
+{word:"absorb",phonetic:"[əbˈzɔːb]",meaning:"v. 吸收",example:"Plants absorb water from the soil."},
+{word:"abstract",phonetic:"[ˈæbstrækt]",meaning:"a. 抽象的",example:"The concept of beauty is abstract."},
+{word:"abundant",phonetic:"[əˈbʌndənt]",meaning:"a. 丰富的",example:"The country has abundant resources."},
+{word:"academic",phonetic:"[ˌækəˈdemɪk]",meaning:"a. 学术的",example:"She has an academic record."},
+{word:"accept",phonetic:"[əkˈsept]",meaning:"v. 接受",example:"Please accept my apology."},
+{word:"access",phonetic:"[ˈækses]",meaning:"n. 进入；访问",example:"The building has wheelchair access."},
+{word:"accident",phonetic:"[ˈæksɪdənt]",meaning:"n. 事故",example:"There was a car accident."},
+{word:"accommodation",phonetic:"[əˌkɒməˈdeɪʃn]",meaning:"n. 住宿",example:"The price includes accommodation."},
+{word:"accompany",phonetic:"[əˈkʌmpəni]",meaning:"v. 陪伴",example:"She accompanied her friend."},
+{word:"accomplish",phonetic:"[əˈkʌmplɪʃ]",meaning:"v. 完成",example:"We accomplished our mission."},
+{word:"account",phonetic:"[əˈkaʊnt]",meaning:"n. 账户",example:"She opened a bank account."},
+{word:"accurate",phonetic:"[ˈækjərət]",meaning:"a. 准确的",example:"The clock is accurate."},
+{word:"achieve",phonetic:"[əˈtʃiːv]",meaning:"v. 实现",example:"She achieved good grades."},
+{word:"acknowledge",phonetic:"[əkˈnɒlɪdʒ]",meaning:"v. 承认",example:"He acknowledged his mistake."},
+{word:"acquire",phonetic:"[əˈkwaɪə]",meaning:"v. 获得",example:"She acquired knowledge of English."},
+{word:"across",phonetic:"[əˈkrɒs]",meaning:"prep. 横过",example:"The bridge goes across the river."},
+{word:"action",phonetic:"[ˈækʃn]",meaning:"n. 行动",example:"We need to take action."},
+{word:"active",phonetic:"[ˈæktɪv]",meaning:"a. 积极的",example:"She is an active member."},
+{word:"activity",phonetic:"[ækˈtɪvəti]",meaning:"n. 活动",example:"The children enjoyed activities."},
+{word:"actor",phonetic:"[ˈæktə]",meaning:"n. 演员",example:"He wants to become an actor."},
+{word:"actual",phonetic:"[ˈæktʃuəl]",meaning:"a. 实际的",example:"What were his actual words?"},
+{word:"adapt",phonetic:"[əˈdæpt]",meaning:"v. 适应",example:"He adapted to his new school."},
+{word:"add",phonetic:"[æd]",meaning:"v. 添加",example:"Add some sugar."},
+{word:"address",phonetic:"[əˈdres]",meaning:"n. 地址",example:"Write your address clearly."},
+{word:"adequate",phonetic:"[ˈædɪkwət]",meaning:"a. 足够的",example:"The food was adequate."},
+{word:"adjust",phonetic:"[əˈdʒʌst]",meaning:"v. 调整",example:"You can adjust the seat."},
+{word:"admire",phonetic:"[ədˈmaɪə]",meaning:"v. 钦佩",example:"I admire your courage."},
+{word:"admit",phonetic:"[ədˈmɪt]",meaning:"v. 承认",example:"He admitted his mistake."},
+{word:"adopt",phonetic:"[əˈdɒpt]",meaning:"v. 采纳",example:"They adopted a new policy."},
+{word:"adult",phonetic:"[ˈædʌlt]",meaning:"n. 成人",example:"This movie is for adults."},
+{word:"advance",phonetic:"[ədˈvɑːns]",meaning:"v. 前进",example:"The army advanced."},
+{word:"advantage",phonetic:"[ədˈvɑːntɪdʒ]",meaning:"n. 优势",example:"There are many advantages."},
+{word:"adventure",phonetic:"[ədˈventʃə]",meaning:"n. 冒险",example:"It was a great adventure."},
+{word:"advertise",phonetic:"[ˈædvətaɪz]",meaning:"v. 做广告",example:"They advertised their product."},
+{word:"advice",phonetic:"[ədˈvaɪs]",meaning:"n. 建议",example:"Can you give me some advice?"},
+{word:"advise",phonetic:"[ədˈvaɪz]",meaning:"v. 建议",example:"I would advise you to wait."},
+{word:"affair",phonetic:"[əˈfeə]",meaning:"n. 事件",example:"The wedding was a grand affair."},
+{word:"affect",phonetic:"[əˈfekt]",meaning:"v. 影响",example:"The weather will affect our plans."},
+{word:"afford",phonetic:"[əˈfɔːd]",meaning:"v. 负担得起",example:"I can't afford a new car."},
+{word:"afraid",phonetic:"[əˈfreɪd]",meaning:"a. 害怕的",example:"Don't be afraid to ask."},
+{word:"after",phonetic:"[ˈɑːftə]",meaning:"prep. 在…之后",example:"I'll call you after the meeting."},
+{word:"again",phonetic:"[əˈɡen]",meaning:"ad. 再一次",example:"Please try again."},
+{word:"against",phonetic:"[əˈɡenst]",meaning:"prep. 反对",example:"He leaned against the wall."},
+{word:"age",phonetic:"[eɪdʒ]",meaning:"n. 年龄",example:"What is your age?"},
+{word:"agency",phonetic:"[ˈeɪdʒənsi]",meaning:"n. 机构",example:"She works for a travel agency."},
+{word:"agent",phonetic:"[ˈeɪdʒənt]",meaning:"n. 代理人",example:"He is an insurance agent."},
+{word:"agree",phonetic:"[əˈɡriː]",meaning:"v. 同意",example:"I agree with your opinion."},
+{word:"agreement",phonetic:"[əˈɡriːmənt]",meaning:"n. 协议",example:"We reached an agreement."},
+{word:"ahead",phonetic:"[əˈhed]",meaning:"ad. 向前",example:"Go straight ahead."},
+{word:"aid",phonetic:"[eɪd]",meaning:"n. 帮助",example:"First aid is important."},
+{word:"aim",phonetic:"[eɪm]",meaning:"v. 瞄准",example:"He aimed at the target."},
+{word:"air",phonetic:"[eə]",meaning:"n. 空气",example:"Fresh air is good for health."},
+{word:"aircraft",phonetic:"[ˈeəkrɑːft]",meaning:"n. 飞机",example:"The aircraft landed safely."},
+{word:"airline",phonetic:"[ˈeəlaɪn]",meaning:"n. 航空公司",example:"Which airline are you flying?"},
+{word:"airport",phonetic:"[ˈeəpɔːt]",meaning:"n. 机场",example:"We arrived at the airport."},
+{word:"alarm",phonetic:"[əˈlɑːm]",meaning:"n. 警报",example:"The alarm went off at 6 AM."},
+{word:"album",phonetic:"[ˈælbəm]",meaning:"n. 相册",example:"She keeps photos in an album."},
+{word:"alcohol",phonetic:"[ˈælkəhɒl]",meaning:"n. 酒精",example:"The drink contains no alcohol."},
+{word:"alive",phonetic:"[əˈlaɪv]",meaning:"a. 活着的",example:"Is she still alive?"},
+{word:"allow",phonetic:"[əˈlaʊ]",meaning:"v. 允许",example:"Smoking is not allowed."},
+{word:"almost",phonetic:"[ˈɔːlməʊst]",meaning:"ad. 几乎",example:"It's almost time to go."},
+{word:"alone",phonetic:"[əˈləʊn]",meaning:"a. 单独的",example:"She lives alone."},
+{word:"along",phonetic:"[əˈlɒŋ]",meaning:"prep. 沿着",example:"Walk along this road."},
+{word:"already",phonetic:"[ɔːlˈredi]",meaning:"ad. 已经",example:"I've already finished."},
+{word:"also",phonetic:"[ˈɔːlsəʊ]",meaning:"ad. 也",example:"She also likes swimming."},
+{word:"although",phonetic:"[ɔːlˈðəʊ]",meaning:"conj. 虽然",example:"Although it rained, we enjoyed."},
+{word:"always",phonetic:"[ˈɔːlweɪz]",meaning:"ad. 总是",example:"She is always happy."},
+{word:"amaze",phonetic:"[əˈmeɪz]",meaning:"v. 使惊奇",example:"The magician amazed everyone."},
+{word:"ambition",phonetic:"[æmˈbɪʃn]",meaning:"n. 雄心",example:"His ambition is to be a doctor."},
+{word:"ambulance",phonetic:"[ˈæmbjələns]",meaning:"n. 救护车",example:"Call an ambulance!"},
+{word:"among",phonetic:"[əˈmʌŋ]",meaning:"prep. 在…之中",example:"She was among friends."},
+{word:"amount",phonetic:"[əˈmaʊnt]",meaning:"n. 数量",example:"A large amount was stolen."},
+{word:"amuse",phonetic:"[əˈmjuːz]",meaning:"v. 使愉快",example:"The clown amused the children."},
+{word:"analyze",phonetic:"[ˈænəlaɪz]",meaning:"v. 分析",example:"We need to analyze the data."},
+{word:"ancient",phonetic:"[ˈeɪnʃənt]",meaning:"a. 古代的",example:"They visited an ancient temple."},
+{word:"anger",phonetic:"[ˈæŋɡə]",meaning:"n. 愤怒",example:"He couldn't hide his anger."},
+{word:"angle",phonetic:"[ˈæŋɡl]",meaning:"n. 角度",example:"Measure the angle."},
+{word:"angry",phonetic:"[ˈæŋɡri]",meaning:"a. 生气的",example:"She was angry with him."},
+{word:"animal",phonetic:"[ˈænɪml]",meaning:"n. 动物",example:"Dogs are domestic animals."},
+{word:"announce",phonetic:"[əˈnaʊns]",meaning:"v. 宣布",example:"They announced their engagement."},
+{word:"annual",phonetic:"[ˈænjuəl]",meaning:"a. 年度的",example:"This is our annual meeting."},
+{word:"another",phonetic:"[əˈnʌðə]",meaning:"a. 另一个",example:"Would you like another cup?"},
+{word:"answer",phonetic:"[ˈɑːnsə]",meaning:"v. 回答",example:"Please answer the question."},
+{word:"anxiety",phonetic:"[æŋˈzaɪəti]",meaning:"n. 焦虑",example:"She felt anxiety before the exam."},
+{word:"anxious",phonetic:"[ˈæŋkʃəs]",meaning:"a. 焦虑的",example:"I'm anxious about the results."},
+{word:"any",phonetic:"[ˈeni]",meaning:"a. 任何的",example:"Do you have any questions?"},
+{word:"anybody",phonetic:"[ˈenibɒdi]",meaning:"pron. 任何人",example:"Is anybody home?"},
+{word:"anyone",phonetic:"[ˈeniwʌn]",meaning:"pron. 任何人",example:"Can anyone help me?"},
+{word:"anything",phonetic:"[ˈeniθɪŋ]",meaning:"pron. 任何事",example:"You can buy anything."},
+{word:"anyway",phonetic:"[ˈeniweɪ]",meaning:"ad. 无论如何",example:"I'll go anyway."},
+{word:"anywhere",phonetic:"[ˈeniweə]",meaning:"ad. 任何地方",example:"You can sit anywhere."},
+{word:"apart",phonetic:"[əˈpɑːt]",meaning:"ad. 分开",example:"The houses are far apart."},
+{word:"apartment",phonetic:"[əˈpɑːtmənt]",meaning:"n. 公寓",example:"She lives in an apartment."},
+{word:"apologize",phonetic:"[əˈpɒlədʒaɪz]",meaning:"v. 道歉",example:"I apologize for being late."},
+{word:"appear",phonetic:"[əˈpɪə]",meaning:"v. 出现",example:"A figure appeared."},
+{word:"apple",phonetic:"[ˈæpl]",meaning:"n. 苹果",example:"An apple a day keeps the doctor away."},
+{word:"application",phonetic:"[ˌæplɪˈkeɪʃn]",meaning:"n. 申请",example:"I sent my job application."},
+{word:"apply",phonetic:"[əˈplaɪ]",meaning:"v. 申请",example:"I'll apply for the job."},
+{word:"appointment",phonetic:"[əˈpɔɪntmənt]",meaning:"n. 预约",example:"I have a doctor appointment."},
+{word:"appreciate",phonetic:"[əˈpriːʃieɪt]",meaning:"v. 感激",example:"I appreciate your help."},
+{word:"approach",phonetic:"[əˈprəʊtʃ]",meaning:"v. 接近",example:"Winter is approaching."},
+{word:"appropriate",phonetic:"[əˈprəʊpriət]",meaning:"a. 适当的",example:"Wear appropriate clothing."},
+{word:"approve",phonetic:"[əˈpruːv]",meaning:"v. 批准",example:"The committee approved the plan."},
+{word:"architect",phonetic:"[ˈɑːkɪtekt]",meaning:"n. 建筑师",example:"The architect designed this building."},
+{word:"area",phonetic:"[ˈeəriə]",meaning:"n. 区域",example:"This is a residential area."},
+{word:"argue",phonetic:"[ˈɑːɡjuː]",meaning:"v. 争论",example:"They argued about politics."},
+{word:"arise",phonetic:"[əˈraɪz]",meaning:"v. 出现",example:"Problems arose during the project."},
+{word:"arm",phonetic:"[ɑːm]",meaning:"n. 手臂",example:"She held the child in her arms."},
+{word:"army",phonetic:"[ˈɑːmi]",meaning:"n. 军队",example:"He joined the army."},
+{word:"around",phonetic:"[əˈraʊnd]",meaning:"prep. 周围",example:"The children sat around the table."},
+{word:"arrange",phonetic:"[əˈreɪndʒ]",meaning:"v. 安排",example:"I'll arrange a meeting."},
+{word:"arrest",phonetic:"[əˈrest]",meaning:"v. 逮捕",example:"The police arrested the suspect."},
+{word:"arrive",phonetic:"[əˈraɪv]",meaning:"v. 到达",example:"What time does the train arrive?"},
+{word:"arrow",phonetic:"[ˈærəʊ]",meaning:"n. 箭",example:"He shot an arrow at the target."},
+{word:"article",phonetic:"[ˈɑːtɪkl]",meaning:"n. 文章",example:"She wrote an article."},
+{word:"artist",phonetic:"[ˈɑːtɪst]",meaning:"n. 艺术家",example:"She is a talented artist."},
+{word:"as",phonetic:"[æz]",meaning:"conj. 当…时",example:"As she was leaving, the phone rang."},
+{word:"ashamed",phonetic:"[əˈʃeɪmd]",meaning:"a. 羞耻的",example:"He was ashamed of his behavior."},
+{word:"aside",phonetic:"[əˈsaɪd]",meaning:"ad. 在一边",example:"She stepped aside."},
+{word:"ask",phonetic:"[ɑːsk]",meaning:"v. 问",example:"May I ask a question?"},
+{word:"asleep",phonetic:"[əˈsliːp]",meaning:"a. 睡着的",example:"The baby is asleep."},
+{word:"aspect",phonetic:"[ˈæspekt]",meaning:"n. 方面",example:"We discussed every aspect."},
+{word:"assess",phonetic:"[əˈses]",meaning:"v. 评估",example:"We need to assess the situation."},
+{word:"assign",phonetic:"[əˈsaɪn]",meaning:"v. 分配",example:"The teacher assigned homework."},
+{word:"assist",phonetic:"[əˈsɪst]",meaning:"v. 帮助",example:"Can you assist me?"},
+{word:"assume",phonetic:"[əˈsjuːm]",meaning:"v. 假设",example:"I assume you're coming."},
+{word:"assure",phonetic:"[əˈʃɔː]",meaning:"v. 保证",example:"I can assure you of our support."},
+{word:"astonish",phonetic:"[əˈstɒnɪʃ]",meaning:"v. 使惊讶",example:"The news astonished everyone."},
+{word:"athlete",phonetic:"[ˈæθliːt]",meaning:"n. 运动员",example:"She is a professional athlete."},
+{word:"atmosphere",phonetic:"[ˈætməsfɪə]",meaning:"n. 气氛",example:"The restaurant has a nice atmosphere."},
+{word:"attach",phonetic:"[əˈtætʃ]",meaning:"v. 附上",example:"Please attach the file."},
+{word:"attack",phonetic:"[əˈtæk]",meaning:"v. 攻击",example:"The army attacked at dawn."},
+{word:"attempt",phonetic:"[əˈtempt]",meaning:"v. 尝试",example:"He attempted to climb the mountain."},
+{word:"attend",phonetic:"[əˈtend]",meaning:"v. 参加",example:"I will attend the meeting."},
+{word:"attention",phonetic:"[əˈtenʃn]",meaning:"n. 注意",example:"Pay attention to the teacher."},
+{word:"attitude",phonetic:"[ˈætɪtjuːd]",meaning:"n. 态度",example:"She has a positive attitude."},
+{word:"attract",phonetic:"[əˈtrækt]",meaning:"v. 吸引",example:"The festival attracts visitors."},
+{word:"audience",phonetic:"[ˈɔːdiəns]",meaning:"n. 观众",example:"The audience clapped loudly."},
+{word:"author",phonetic:"[ˈɔːθə]",meaning:"n. 作者",example:"Who is the author?"},
+{word:"authority",phonetic:"[ɔːˈθɒrəti]",meaning:"n. 权威",example:"The authority approved the plan."},
+{word:"automatic",phonetic:"[ˌɔːtəˈmætɪk]",meaning:"a. 自动的",example:"The door is automatic."},
+{word:"available",phonetic:"[əˈveɪləbl]",meaning:"a. 可用的",example:"Is this seat available?"},
+{word:"average",phonetic:"[ˈævərɪdʒ]",meaning:"n. 平均",example:"The average age is 35."},
+{word:"avoid",phonetic:"[əˈvɔɪd]",meaning:"v. 避免",example:"Try to avoid mistakes."},
+{word:"award",phonetic:"[əˈwɔːd]",meaning:"n. 奖项",example:"She won an award."},
+{word:"aware",phonetic:"[əˈweə]",meaning:"a. 意识到的",example:"Are you aware of the rules?"},
+{word:"awful",phonetic:"[ˈɔːfl]",meaning:"a. 可怕的",example:"The weather was awful."},
+{word:"baby",phonetic:"[ˈbeɪbi]",meaning:"n. 婴儿",example:"The baby is sleeping."},
+{word:"back",phonetic:"[bæk]",meaning:"n. 背部",example:"She carried a backpack on her back."},
+{word:"background",phonetic:"[ˈbækɡraʊnd]",meaning:"n. 背景",example:"Tell me about your background."},
+{word:"balance",phonetic:"[ˈbæləns]",meaning:"n. 平衡",example:"You need to keep a balance."},
+{word:"ball",phonetic:"[bɔːl]",meaning:"n. 球",example:"He kicked the ball."},
+{word:"ban",phonetic:"[bæn]",meaning:"v. 禁止",example:"Smoking is banned."},
+{word:"banana",phonetic:"[bəˈnɑːnə]",meaning:"n. 香蕉",example:"I eat a banana for breakfast."},
+{word:"band",phonetic:"[bænd]",meaning:"n. 乐队",example:"The band played until midnight."},
+{word:"bank",phonetic:"[bæŋk]",meaning:"n. 银行",example:"I need to go to the bank."},
+{word:"bar",phonetic:"[bɑː]",meaning:"n. 酒吧",example:"Let's meet at the bar."},
+{word:"base",phonetic:"[beɪs]",meaning:"n. 基础",example:"The company has its base in London."},
+{word:"basic",phonetic:"[ˈbeɪsɪk]",meaning:"a. 基本的",example:"We need basic skills first."},
+{word:"basket",phonetic:"[ˈbɑːskɪt]",meaning:"n. 篮子",example:"She carried a basket of fruit."},
+{word:"basketball",phonetic:"[ˈbɑːskɪtbɔːl]",meaning:"n. 篮球",example:"He loves playing basketball."},
+{word:"bath",phonetic:"[bɑːθ]",meaning:"n. 洗澡",example:"I need a hot bath."},
+{word:"bathroom",phonetic:"[ˈbɑːθruːm]",meaning:"n. 浴室",example:"Where is the bathroom?"},
+{word:"battery",phonetic:"[ˈbætri]",meaning:"n. 电池",example:"The battery is dead."},
+{word:"battle",phonetic:"[ˈbætl]",meaning:"n. 战斗",example:"They won the battle."},
+{word:"beach",phonetic:"[biːtʃ]",meaning:"n. 海滩",example:"We went to the beach."},
+{word:"bear",phonetic:"[beə]",meaning:"n. 熊",example:"Bears live in the forest."},
+{word:"beat",phonetic:"[biːt]",meaning:"v. 打败",example:"Our team beat them."},
+{word:"beautiful",phonetic:"[ˈbjuːtɪfl]",meaning:"a. 美丽的",example:"She is beautiful."},
+{word:"beauty",phonetic:"[ˈbjuːti]",meaning:"n. 美",example:"She is known for her beauty."},
+{word:"because",phonetic:"[bɪˈkɒz]",meaning:"conj. 因为",example:"I stayed because it was raining."},
+{word:"become",phonetic:"[bɪˈkʌm]",meaning:"v. 变成",example:"He became a doctor."},
+{word:"bed",phonetic:"[bed]",meaning:"n. 床",example:"It's time to go to bed."},
+{word:"bedroom",phonetic:"[ˈbedruːm]",meaning:"n. 卧室",example:"She has a nice bedroom."},
+{word:"beer",phonetic:"[bɪə]",meaning:"n. 啤酒",example:"Would you like a beer?"},
+{word:"before",phonetic:"[bɪˈfɔː]",meaning:"prep. 在…之前",example:"Call me before you leave."},
+{word:"begin",phonetic:"[bɪˈɡɪn]",meaning:"v. 开始",example:"Let's begin the meeting."},
+{word:"behavior",phonetic:"[bɪˈheɪvjə]",meaning:"n. 行为",example:"His behavior was strange."},
+{word:"behind",phonetic:"[bɪˈhaɪnd]",meaning:"prep. 在…后面",example:"The sun is behind the clouds."},
+{word:"believe",phonetic:"[bɪˈliːv]",meaning:"v. 相信",example:"I believe you."},
+{word:"bell",phonetic:"[bel]",meaning:"n. 铃",example:"The bell rang."},
+{word:"belong",phonetic:"[bɪˈlɒŋ]",meaning:"v. 属于",example:"This book belongs to me."},
+{word:"below",phonetic:"[bɪˈləʊ]",meaning:"prep. 在…下面",example:"The temperature is below zero."},
+{word:"belt",phonetic:"[belt]",meaning:"n. 腰带",example:"He wore a leather belt."},
+{word:"bench",phonetic:"[bentʃ]",meaning:"n. 长椅",example:"They sat on the bench."},
+{word:"bend",phonetic:"[bend]",meaning:"v. 弯曲",example:"Don't bend the rules."},
+{word:"benefit",phonetic:"[ˈbenɪfɪt]",meaning:"n. 好处",example:"Exercise has many benefits."},
+{word:"beside",phonetic:"[bɪˈsaɪd]",meaning:"prep. 在…旁边",example:"She sat beside him."},
+{word:"best",phonetic:"[best]",meaning:"a. 最好的",example:"This is the best solution."},
+{word:"better",phonetic:"[ˈbetə]",meaning:"a. 更好的",example:"This one is better."},
+{word:"between",phonetic:"[bɪˈtwiːn]",meaning:"prep. 在…之间",example:"The meeting is between 2 and 4."},
+{word:"beyond",phonetic:"[bɪˈjɒnd]",meaning:"prep. 超过",example:"It's beyond my understanding."},
+{word:"bicycle",phonetic:"[ˈbaɪsɪkl]",meaning:"n. 自行车",example:"He rides a bicycle to school."},
+{word:"big",phonetic:"[bɪɡ]",meaning:"a. 大的",example:"This is a big city."},
+{word:"bike",phonetic:"[baɪk]",meaning:"n. 自行车",example:"I ride my bike to work."},
+{word:"bill",phonetic:"[bɪl]",meaning:"n. 账单",example:"Can I have the bill?"},
+{word:"billion",phonetic:"[ˈbɪljən]",meaning:"n. 十亿",example:"The company is worth billions."},
+{word:"biology",phonetic:"[baɪˈɒlədʒi]",meaning:"n. 生物学",example:"She studies biology."},
+{word:"bird",phonetic:"[bɜːd]",meaning:"n. 鸟",example:"Birds can fly."},
+{word:"birth",phonetic:"[bɜːθ]",meaning:"n. 出生",example:"The birth of a baby."},
+{word:"birthday",phonetic:"[ˈbɜːθdeɪ]",meaning:"n. 生日",example:"Happy birthday!"},
+{word:"bit",phonetic:"[bɪt]",meaning:"n. 一点",example:"Wait a bit."},
+{word:"bite",phonetic:"[baɪt]",meaning:"v. 咬",example:"The dog might bite."},
+{word:"bitter",phonetic:"[ˈbɪtə]",meaning:"a. 苦的",example:"The medicine tastes bitter."},
+{word:"black",phonetic:"[blæk]",meaning:"a. 黑色的",example:"She wore a black dress."},
+{word:"blame",phonetic:"[bleɪm]",meaning:"v. 责备",example:"Don't blame me."},
+{word:"blanket",phonetic:"[ˈblæŋkɪt]",meaning:"n. 毯子",example:"She covered herself with a blanket."},
+{word:"blind",phonetic:"[blaɪnd]",meaning:"a. 盲的",example:"He is
