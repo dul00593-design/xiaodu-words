@@ -291,5 +291,59 @@ const vocabulary=[
 {word:"bitter",phonetic:"[ˈbɪtə]",meaning:"a. 苦的",example:"The medicine tastes bitter."},
 {word:"black",phonetic:"[blæk]",meaning:"a. 黑色的",example:"She wore a black dress."},
 {word:"blame",phonetic:"[bleɪm]",meaning:"v. 责备",example:"Don't blame me."},
-{word:"blanket",phonetic:"[ˈblæŋkɪt]",meaning:"n. 毯子",example:"She covered herself with a blanket."},
-{word:"blind",phonetic:"[blaɪnd]",meaning:"a. 盲的",example:"He is
+{word:"blanket",phonetic:"[ˈblæŋkɪt]",meaning:"n. 毯子",example:"She covered herself with a blanket."}];
+let todayWords=[];
+let userData=JSON.parse(localStorage.getItem("xiaoduWords"))||{totalDays:0,totalWords:0,currentStreak:0,lastCheckIn:null,learnedWords:[],dayIndex:0};
+let learnedToday=new Set();
+function init(){
+    document.getElementById("todayDate").textContent=new Date().toLocaleDateString("zh-CN",{year:"numeric",month:"long",day:"numeric",weekday:"long"});
+    initTodayWords();
+}
+function initTodayWords(){
+    const seed=getDaySeed();
+    let indices=[];
+    for(let i=0;i<vocabulary.length;i++)indices.push(i);
+    for(let i=indices.length-1;i>0;i--){const j=(seed+i)%indices.length;[indices[i],indices[j]]=[indices[j],indices[i]];}
+    todayWords=indices.slice(0,10).map(i=>vocabulary[i]);
+    renderWords();
+    updateStats();
+}
+function getDaySeed(){const today=new Date();return today.getFullYear()*10000+(today.getMonth()+1)*100+today.getDate();}
+function renderWords(){
+    const list=document.getElementById("wordList");
+    list.innerHTML=todayWords.map((item,index)=>`<div class="word-item" onclick="toggleWord(${index})"><div class="word-header"><div class="word-title">${index+1}. ${item.word}</div><button class="sound-btn" onclick="event.stopPropagation();speakWord('${item.word}')">🔊</button></div><div class="word-phonetic">${item.phonetic}</div><div class="word-meaning">${item.meaning}</div><div class="word-example">${item.example}</div></div>`).join("");
+}
+function toggleWord(index){
+    const items=document.querySelectorAll(".word-item");
+    items[index].classList.toggle("expanded");
+    learnedToday.add(index);
+    document.getElementById("progress").textContent=`${learnedToday.size}/10`;
+}
+function speakWord(word){const utterance=new SpeechSynthesisUtterance(word);utterance.lang="en-US";speechSynthesis.speak(utterance);}
+function updateStats(){document.getElementById("totalDays").textContent=userData.totalDays;document.getElementById("totalWords").textContent=userData.totalWords;document.getElementById("currentStreak").textContent=userData.currentStreak;updateBadges();}
+function updateBadges(){
+    const badges=[];
+    if(userData.totalDays>=7)badges.push('<span class="badge earned">🏆 周满勤</span>');
+    if(userData.totalDays>=30)badges.push('<span class="badge earned">🏅 月满勤</span>');
+    if(userData.totalDays>=100)badges.push('<span class="badge earned">💎 百日达人</span>');
+    if(userData.totalWords>=1000)badges.push('<span class="badge earned">📚 千词达人</span>');
+    document.getElementById("badgeList").innerHTML=badges.join("");
+}
+function checkIn(){
+    if(learnedToday.size<10){alert("请先学习完今天的10个单词！");return;}
+    const today=new Date().toDateString();
+    if(userData.lastCheckIn===today){alert("今天已经打卡过了！");return;}
+    userData.totalDays++;
+    userData.totalWords+=10;
+    const yesterday=new Date();yesterday.setDate(yesterday.getDate()-1);
+    if(userData.lastCheckIn===yesterday.toDateString()){userData.currentStreak++;}else{userData.currentStreak=1;}
+    userData.lastCheckIn=today;
+    localStorage.setItem("xiaoduWords",JSON.stringify(userData));
+    updateStats();
+    document.getElementById("successModal").classList.add("show");
+}
+function closeModal(){document.getElementById("successModal").classList.remove("show");}
+init();
+</script>
+</body>
+</html>
