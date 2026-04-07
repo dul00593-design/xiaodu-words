@@ -296,7 +296,8 @@ function renderWords(){
   for(var i=0;i<todayWords.length;i++){
     var w=todayWords[i];
     html+='<div class="word-item" onclick="toggleWord(this)">';
-    html+='<div class="word-title">'+(i+1)+'. '+w.word+'</div>';
+    html+='<div class="word-header"><div class="word-title">'+(i+1)+'. '+w.word+'</div>';
+    html+='<button class="sound-btn" onclick="event.stopPropagation();speakWord(\''+w.word+'\')">🔊</button></div>';
     html+='<div class="word-phonetic">'+w.phonetic+'</div>';
     html+='<div class="word-meaning">'+w.meaning+'</div>';
     html+='<div class="word-example">'+w.example+'</div>';
@@ -308,6 +309,15 @@ function renderWords(){
 function toggleWord(el){
   el.classList.toggle("expanded");
   learnedToday++;
+}
+
+function speakWord(word){
+  if('speechSynthesis' in window){
+    var utterance=new SpeechSynthesisUtterance(word);
+    utterance.lang='en-US';
+    utterance.rate=0.8;
+    speechSynthesis.speak(utterance);
+  }
 }
 
 function updateStats(){
