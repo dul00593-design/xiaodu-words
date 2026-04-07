@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>小杜的单词打卡</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 20px;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .header .subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .stats-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            text-align: center;
+        }
+        
+        .stat-item .number {
+            font-size: 28px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-item .label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .badge-section {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .badge-section h2 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .badges {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .badge {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            background: #f0f0f0;
+            opacity: 0.3;
+            transition: all 0.3s;
+        }
+        
+        .badge.earned {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+        
+        .badge.weekly { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .badge.monthly { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .badge.hundred { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+        .badge.master { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+        
+        .word-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .word-card h2 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .word-card .progress {
+            font-size: 14px;
+            color: #667eea;
+        }
+        
+        .word-item {
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .word-item:last-child {
+            border-bottom: none;
+        }
+        
+        .word-item:hover {
+            background: #f8f9ff;
+        }
+        
+        .word-item.learned {
+            opacity: 0.6;
+        }
+        
+        .word-item.learned .word-title::after {
+            content: ' ✓';
+            color: #43e97b;
+        }
+        
+        .word-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .word-phonetic {
+            font-size: 14px;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .word-meaning {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .word-example {
+            font-size: 13px;
+            color: #999;
+            font-style: italic;
+            display: none;
+        }
+        
+        .word-item.expanded .word-example {
+            display: block;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #e0e0e0;
+        }
+        
+        .checkin-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 10px;
+        }
+        
+        .checkin-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .checkin-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .checkin-btn.checked {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+        
+        .reminder-section {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .reminder-section h2 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .reminder-section p {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+        
+        .reminder-btn {
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal.show {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            max-width: 300px;
+            animation: pop 0.3s ease;
+        }
+        
+        @keyframes pop {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .modal-content .icon {
+            font-size: 60px;
+            margin-bottom: 15px;
+        }
+        
+        .modal-content h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .modal-content p {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        
+        .modal-content button {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 小杜的单词打卡</h1>
+            <p class="subtitle">每天10个，高考无忧</p>
+        </div>
+        
+        <div class="stats-card">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="number" id="totalDays">0</div>
+                    <div class="label">坚持天数</div>
+                </div>
+                <div class="stat-item">
+                    <div class="number" id="totalWords">0</div>
+                    <div class="label">已学单词</div>
+                </div>
+                <div class="stat-item">
+                    <div class="number" id="weeklyStreak">0</div>
+                    <div class="label">本周打卡</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="badge-section">
+            <h2>🏆 我的勋章</h2>
+            <div class="badges">
+                <div class="badge weekly" title="周满勤">📅</div>
+                <div class="badge monthly" title="月满勤">🌙</div>
+                <div class="badge hundred" title="百天成就">💯</div>
+                <div class="badge master" title="单词大师">👑</div>
+            </div>
+        </div>
+        
+        <div class="word-card">
+            <h2>
+                今日单词
+                <span class="progress">0/10</span>
+            </h2>
+            <div id="wordList"></div>
+            <button class="checkin-btn" id="checkinBtn" onclick="checkIn()">
+                完成今日打卡
+            </button>
+        </div>
+        
+        <div class="reminder-section">
+            <h2>⏰ 每日提醒</h2>
+            <p>每天晚上22:00提醒打卡学习</p>
+            <button class="reminder-btn" onclick="subscribeReminder()">开启提醒</button>
+        </div>
+    </div>
+    
+    <div class="modal" id="successModal">
+        <div class="modal-content">
+            <div class="icon">🎉</div>
+            <h3>打卡成功！</h3>
+            <p id="successText">太棒了！继续保持！</p>
+            <button onclick="closeModal()">好的</button>
+        </div>
+    </div>
+
+    <script>
+        // 高考核心词汇（前100个作为示例）
+        const wordData = [
+            { word: "abandon", phonetic: "[əˈbændən]", meaning: "v. 抛弃，舍弃，放弃", example: "He abandoned his car in the snow." },
+            { word: "ability", phonetic: "[əˈbɪləti]", meaning: "n. 能力；才能", example: "She has the ability to speak four languages." },
+            { word: "able", phonetic: "[ˈeɪbl]", meaning: "a. 能够；有能力的", example: "I was able to solve the problem." },
+            { word: "abnormal", phonetic: "[æbˈnɔːml]", meaning: "a. 反常的，变态的", example: "The test results showed an abnormal level of cholesterol." },
+            { word: "aboard", phonetic: "[əˈbɔːd]", meaning: "prep. 上（船、飞机、火车等）", example: "Welcome aboard Flight 123 to Paris." },
+            { word: "abolish", phonetic: "[əˈbɒlɪʃ]", meaning: "v. 废除，废止", example: "The government plans to abolish the old law." },
+            { word: "abortion", phonetic: "[əˈbɔːʃn]", meaning: "n. 人工流产，堕胎", example: "The issue of abortion is highly controversial." },
+            { word: "about", phonetic: "[əˈbaʊt]", meaning: "prep. 关于；ad. 大约", example: "What are you talking about?" },
+            { word: "above", phonetic: "[əˈbʌv]", meaning: "prep. 在……上面", example: "The temperature is above average today." },
+            { word: "abroad", phonetic: "[əˈbrɔːd]", meaning: "ad. 到（在）国外", example: "She studies abroad in the United States." }
+        ];
+        
+        // 从localStorage读取数据
+        let userData = JSON.parse(localStorage.getItem('xiaoduWords')) || {
+            totalDays: 0,
+            totalWords: 0,
+            weeklyStreak: 0,
+            lastCheckIn: null,
+            learnedWords: [],
+            badges: []
+        };
+        
+        let todayLearned = new Set();
+        
+        // 初始化页面
+        function init() {
+            updateStats();
+            renderWords();
+            updateBadges();
+            checkDailyReset();
+        }
+        
+        // 更新统计数据
+        function updateStats() {
+            document.getElementById('totalDays').textContent = userData.totalDays;
+            document.getElementById('totalWords').textContent = userData.totalWords;
+            document.getElementById('weeklyStreak').textContent = userData.weeklyStreak;
+        }
+        
+        // 渲染单词列表
+        function renderWords() {
+            const list = document.getElementById('wordList');
+            list.innerHTML = wordData.map((item, index) => `
+                <div class="word-item ${todayLearned.has(index) ? 'learned' : ''}" onclick="toggleWord(${index})">
+                    <div class="word-title">${index + 1}. ${item.word}</div>
+                    <div class="word-phonetic">${item.phonetic}</div>
+                    <div class="word-meaning">${item.meaning}</div>
+                    <div class="word-example">${item.example}</div>
+                </div>
+            `).join('');
+            
+            updateProgress();
+        }
+        
+        // 切换单词展开/学习状态
+        function toggleWord(index) {
+            const items = document.querySelectorAll('.word-item');
+            items[index].classList.toggle('expanded');
+            
+            if (!todayLearned.has(index)) {
+                todayLearned.add(index);
+                items[index].classList.add('learned');
+                updateProgress();
+            }
+        }
+        
+        // 更新进度
+        function updateProgress() {
+            const progress = document.querySelector('.progress');
+            progress.textContent = `${todayLearned.size}/10`;
+            
+            const btn = document.getElementById('checkinBtn');
+            if (todayLearned.size >= 10) {
+                btn.textContent = '完成今日打卡 ✓';
+                btn.classList.add('checked');
+            }
+        }
+        
+        // 打卡
+        function checkIn() {
+            if (todayLearned.size < 10) {
+                alert('请先学习完今天的10个单词！');
+                return;
+            }
+            
+            const today = new Date().toDateString();
+            if (userData.lastCheckIn === today) {
+                alert('今天已经打卡过了！');
+                return;
+            }
+            
+            userData.totalDays++;
+            userData.totalWords += 10;
+            userData.weeklyStreak++;
+            userData.lastCheckIn = today;
+            
+            // 检查勋章
+            checkBadges();
+            
+            localStorage.setItem('xiaoduWords', JSON.stringify(userData));
+            updateStats();
+            updateBadges();
+            
+            // 显示成功弹窗
+            let successText = '太棒了！继续保持！';
+            if (userData.weeklyStreak === 7) successText = '恭喜获得周满勤勋章！🎉';
+            if (userData.totalDays === 100) successText = '恭喜获得百天成就勋章！💯';
+            
+            document.getElementById('successText').textContent = successText;
+            document.getElementById('successModal').classList.add('show');
+        }
+        
+        // 检查勋章
+        function checkBadges() {
+            if (userData.weeklyStreak >= 7 && !userData.badges.includes('weekly')) {
+                userData.badges.push('weekly');
+            }
+            if (userData.totalDays >= 30 && !userData.badges.includes('monthly')) {
+                userData.badges.push('monthly');
+            }
+            if (userData.totalDays >= 100 && !userData.badges.includes('hundred')) {
+                userData.badges.push('hundred');
+            }
+            if (userData.totalWords >= 1000 && !userData.badges.includes('master')) {
+                userData.badges.push('master');
+            }
+        }
+        
+        // 更新勋章显示
+        function updateBadges() {
+            const badges = document.querySelectorAll('.badge');
+            badges.forEach(badge => {
+                if (userData.badges.includes(badge.classList[1])) {
+                    badge.classList.add('earned');
+                }
+            });
+        }
+        
+        // 检查每日重置
+        function checkDailyReset() {
+            const today = new Date().toDateString();
+            if (userData.lastCheckIn !== today) {
+                todayLearned.clear();
+            }
+        }
+        
+        // 关闭弹窗
+        function closeModal() {
+            document.getElementById('successModal').classList.remove('show');
+        }
+        
+        // 订阅提醒
+        function subscribeReminder() {
+            // 这里需要接入微信订阅消息或第三方推送服务
+            alert('提醒功能开发中，每天晚上22:00我会私聊提醒你打卡！');
+        }
+        
+        // 初始化
+        init();
+    </script>
+</body>
+</html>
