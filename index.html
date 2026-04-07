@@ -321,9 +321,10 @@ function speakWord(word){
 }
 
 function updateStats(){
-  document.getElementById("totalDays").textContent=userData.totalDays;
-  document.getElementById("totalWords").textContent=userData.totalWords;
-  document.getElementById("currentStreak").textContent=userData.currentStreak;
+  document.getElementById("totalDays").textContent=userData.totalDays||0;
+  document.getElementById("totalWords").textContent=userData.totalWords||0;
+  document.getElementById("currentStreak").textContent=userData.currentStreak||0;
+  console.log("Stats updated:", userData);
 }
 
 function checkIn(){
